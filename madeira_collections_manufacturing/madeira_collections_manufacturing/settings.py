@@ -46,7 +46,8 @@ INSTALLED_APPS = [
     'rest_framework', 
     'user_manager',
     'inventory',
-    'process'
+    'process',
+    'order'
 ]
 
 MIDDLEWARE = [

@@ -3,6 +3,7 @@ from user_manager.views import create_user, delete_user, login_view, get_all_use
 from inventory.views import get_all_categories, create_category, get_category, update_category, delete_category
 from inventory.views import get_all_materials, create_material, get_material, update_material, delete_material
 from process.views import get_all_processes, create_process, update_process, delete_process, get_process
+from order.views import list_orders, create_order, retrieve_order, update_order, delete_order
 
 urlpatterns = [
     #user and Login api's
@@ -32,5 +33,12 @@ urlpatterns = [
     path('processes/<int:pk>/', get_process, name='get_process'),
     path('processes/<int:pk>/update/', update_process, name='update_process'),
     path('processes/<int:pk>/delete/', delete_process, name='delete_process'),
+
+    #order api's
+    path('orders/', list_orders, name='list_orders'),
+    path('orders/create/', create_order, name='create_order'),
+    path('orders/<int:pk>/', retrieve_order, name='retrieve_order'),
+    path('orders/<int:pk>/update/', update_order, name='update_order'),
+    path('orders/<int:pk>/delete/', delete_order, name='delete_order'),
 
 ]
