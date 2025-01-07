@@ -4,6 +4,10 @@ from inventory.views import get_all_categories, create_category, get_category, u
 from inventory.views import get_all_materials, create_material, get_material, update_material, delete_material
 from process.views import get_all_processes, create_process, update_process, delete_process, get_process
 from order.views import list_orders, create_order, retrieve_order, update_order, delete_order
+from django.conf import settings
+from django.conf.urls.static import static
+from carpenter_work.views import list_carpenter_requests, carpenter_request_accept, carpenter_request_respond
+# , carpenter_requests_delete
 
 urlpatterns = [
     #user and Login api's
@@ -41,4 +45,11 @@ urlpatterns = [
     path('orders/<int:pk>/update/', update_order, name='update_order'),
     path('orders/<int:pk>/delete/', delete_order, name='delete_order'),
 
-]
+    path('carpenter_requests/<int:carpenter_id>/', list_carpenter_requests, name='get_carpenter_requests'),
+    path('carpenter_requests/<int:order_id>/<int:carpenter_id>/accept/',
+         carpenter_request_accept, name='accept_carpenter_request'),
+    path('carpenter_requests/<int:order_id>/<int:carpenter_id>/respond/',
+         carpenter_request_respond, name='accept_carpenter_request'),
+    # path('carpenter_request/<int:order_id>/delete/', carpenter_requests_delete, name='carpenter_requests_delete'),
+
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
