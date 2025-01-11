@@ -17,6 +17,7 @@ class ProcessDetails(models.Model):
         ('completed', 'Completed'),
         ('overdue', 'Overdue'),
     ]
+    
     order_id = models.ForeignKey(
         'order.Order',  # String reference
         on_delete=models.CASCADE,
@@ -55,10 +56,17 @@ class ProcessDetails(models.Model):
     expected_completion_date = models.DateField(
         help_text="Expected date of process completion"
     )
-    total_price = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        help_text="Total price for the process"
+    workers_salary = models.FloatField(
+        help_text="Workers Salary",
+        default=0
+    )
+    material_price = models.FloatField(
+        help_text="Material price",
+        default=0
+    )
+    total_price = models.FloatField(
+        help_text="Total price for the process",
+        default=0
     )
     image = models.ImageField(
         upload_to='process_images/',
@@ -66,7 +74,7 @@ class ProcessDetails(models.Model):
         null=True,
         help_text="Image related to the process"
     )
-
+    over_due = models.BooleanField(default=0)
     def __str__(self):
         return f"Process Details for Order {self.order_id.id} - Process {self.process_id.id}"
     
@@ -83,11 +91,15 @@ class ProcessMaterials(models.Model):
         related_name='process_materials',
         help_text="Reference to the material"
     )
-    material_price = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
+    quantity = models.IntegerField(default=1,
+         help_text="Quantity of the material")
+    
+    material_price = models.FloatField( 
         help_text="Price of the material"
     )
 
+    total_price = models.FloatField( 
+        help_text="Total price"
+    )
     def __str__(self):
         return f"Material {self.material_id.id} for Process {self.process_details_id.id}"

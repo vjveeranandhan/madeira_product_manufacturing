@@ -60,6 +60,8 @@ def carpenter_request_accept(request, order_id, carpenter_id):
         carpenter_enquiries = CarpenterEnquire.objects.filter(order_id=order_id, carpenter_id = carpenter_id)
         for enquiry in carpenter_enquiries:
             enquiry.status = 'checking'
+        order = Order.objects.get(id = order_id)
+        order.enquiry_status = 'checking'
         serializer = CarpenterEnquireSerializer(carpenter_enquiries, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     except Exception as e:
@@ -80,8 +82,32 @@ def carpenter_request_respond(request, order_id, carpenter_id):
                 return JsonResponse({'error': str(e)}, status=404)
 
         for enquiry in carpenter_enquiries:
-            enquiry.status = 'responded'
+            enquiry.status = 'completed'
+        order = Order.objects.get(id = order_id)
+        order.enquiry_status = 'completed' 
         serializer = CarpenterEnquireSerializer(carpenter_enquiries, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=404)
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def carpenter_request_material_creation(request, order_id, carpenter_id, carpenter_request_id, material_id):
+    try:
+        carpenter_enquiry = CarpenterEnquire.objects.filter(
+            id=carpenter_request_id,
+            order_id=order_id,
+            carpenter_id=carpenter_id,
+            material_id=material_id,
+            status = 'checking'
+        ).first()
+        if not carpenter_enquiry:
+            return JsonResponse({'error': 'Carpenter Enquiry not found'}, status=404)
+        serializer = CarpenterEnquireSerializer(carpenter_enquiry, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return JsonResponse({'error': serializer.errors}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

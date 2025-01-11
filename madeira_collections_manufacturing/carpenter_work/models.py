@@ -7,7 +7,7 @@ class CarpenterEnquire(models.Model):
     STATUS_CHOICES = [
         ('requested', 'Requested'),
         ('checking', 'Checking'),
-        ('responded', 'Responded'),
+        ('completed', 'Completed)'),
     ]
     order_id = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='carpenter_enquiries', help_text="Reference to the related order")
     material_id = models.ForeignKey(Material, on_delete=models.CASCADE, related_name='Materials')

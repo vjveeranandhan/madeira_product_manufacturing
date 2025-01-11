@@ -10,8 +10,16 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from carpenter_work.models import CarpenterEnquire
 from inventory.models import Material
 from user_manager.models import CustomUser
+from user_manager.serializer import UserSerializer
 from django.http import JsonResponse
 from carpenter_work.carpenter_enquire_serializer import CarpenterEnquireSerializer
+from inventory.models import Material
+from inventory.MaterialSerializer import MaterialSerializer
+from process.models import ProcessDetails, ProcessMaterials
+from process.models import Process
+from process.ProcessSerializer import ProcessSerializer
+from process.process_details_serializer import ProcessDetailsSerializer, ProcessMaterialsSerializer
+
 
 # Create a new order
 @api_view(['POST'])
@@ -46,10 +54,63 @@ def retrieve_order(request, pk):
         order = Order.objects.get(pk=pk)
         order_serializer = OrderSerializer(order)
         carpenter_enquiry = CarpenterEnquire.objects.filter(order_id=order.id)
-        print(carpenter_enquiry)
-        carpenter_enquiry_serializer = CarpenterEnquireSerializer(carpenter_enquiry, many=True)
+        main_manager = CustomUser.objects.filter(id=order.main_manager_id.id)
+        manager_serialized = UserSerializer(main_manager, many= True)
+        carpenter = CustomUser.objects.filter(id=order.carpenter_id.id)
+        carpenter_serialized = UserSerializer(carpenter, many= True)
+
+        carpenter_enq_data = {}
+        carpenter_data = []
+        for carpenter_enquiry_item in carpenter_enquiry:
+            carpenter_enquiry_serializer = CarpenterEnquireSerializer(carpenter_enquiry_item)
+            carpenter_enq_data['carpenter_enquiry_item'] = carpenter_enquiry_serializer.data
+            material_data = Material.objects.filter(id = carpenter_enquiry_item.material_id.id)
+            serialized_material =  MaterialSerializer(material_data, many=True)
+            carpenter_enq_data['material'] = serialized_material.data
+            carpenter_data.append(carpenter_enq_data)
+        
+
+        #Current process data
+
+        process_details = ProcessDetails.objects.get(order_id= pk, process_id= order.order_stage_id)
+        process_details_serialized = ProcessDetailsSerializer(process_details)
+
+        process_materials = ProcessMaterials.objects.filter(process_details_id = process_details_serialized.data['id'])
+        process_materials_serialized = ProcessMaterialsSerializer(process_materials, many= True)
+
+        process = Process.objects.get(id= order.order_stage_id.id)
+        process_serialised = ProcessSerializer(process)
+
+        current_process = {
+                'process': process_serialised.data,
+                'process_details': process_details_serialized.data,
+                'process_materials': process_materials_serialized.data
+        }
+
+        #Completed process Details
+        # completed_process_list = []
+        # for process in order.completed_processes.all():
+        #     process_details = ProcessDetails.objects.get(order_id= pk, process_id= order.order_stage_id)
+        #     process_details_serialized = ProcessDetailsSerializer(process_details)
+
+        #     process_materials = ProcessMaterials.objects.filter(process_details_id = process_details_serialized.data['id'])
+        #     process_materials_serialized = ProcessMaterialsSerializer(process_materials, many= True)
+
+        #     process = Process.objects.get(id= order.order_stage_id.id)
+        #     process_serialised = ProcessSerializer(process)
+
+        #     current_process = {
+        #             'process': process_serialised.data,
+        #             'process_details': process_details_serialized.data,
+        #             'process_materials': process_materials_serialized.data
+        #     }
+
         return Response({'order_data': order_serializer.data,
-                          'carpenter_enquiry_data': carpenter_enquiry_serializer.data},
+                          'carpenter_enquiry_data': carpenter_data,
+                          'main_manager': manager_serialized.data,
+                          'carpenter': carpenter_serialized.data,
+                          'current_process': current_process
+                          },
                             status=status.HTTP_200_OK)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=404)
