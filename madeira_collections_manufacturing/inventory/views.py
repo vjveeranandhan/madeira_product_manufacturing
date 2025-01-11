@@ -51,11 +51,13 @@ def update_category(request, pk):
     except InventoryCategory.DoesNotExist:
         return Response({"error": "Category not found"}, status=status.HTTP_404_NOT_FOUND)
 
-    serializer = InventoryCategorySerializer(category, data=request.data)
+    # Set partial=True to allow partial updates
+    serializer = InventoryCategorySerializer(category, data=request.data, partial=True)
     if serializer.is_valid():
         serializer.save()
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
@@ -113,7 +115,7 @@ def update_material(request, pk):
     except Material.DoesNotExist:
         return Response({"error": "Material not found"}, status=status.HTTP_404_NOT_FOUND)
 
-    serializer = MaterialSerializer(material, data=request.data)
+    serializer = MaterialSerializer(material, data=request.data, partial=True)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data)

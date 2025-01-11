@@ -6,12 +6,12 @@ from django.contrib.auth.models import User
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['name', 'age', 'email', 'phone', 'isAdmin']
+        fields = ['name', 'age', 'email', 'phone', 'isAdmin', 'salary_per_hr']
 
 class UserRetrieveSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'date_of_birth', 'phone', 'age']
+        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'date_of_birth', 'phone', 'age', 'salary_per_hr']
 
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150)
@@ -21,4 +21,4 @@ class LoginSerializer(serializers.Serializer):
 class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['id', 'name', 'email', 'phone', 'age', 'isAdmin']  # Include fields you want to expose
+        fields = ['id', 'name', 'email', 'phone', 'age', 'isAdmin', 'salary_per_hr']  # Include fields you want to expose

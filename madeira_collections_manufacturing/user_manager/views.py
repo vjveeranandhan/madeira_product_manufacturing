@@ -122,3 +122,43 @@ def get_user_by_id(request, user_id):
         return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])  # Ensure the user is authenticated
+def update_user_by_id(request, user_id):
+    try:
+        # Retrieve the user object
+        user = get_object_or_404(CustomUser, id=user_id)
+        
+        # Extract the fields from the request data
+        data = request.data
+        
+        # Update only the fields provided in the request
+        if 'username' in data:
+            user.username = data['username']
+        if 'phone' in data:
+            user.phone = data['phone']
+        if 'email' in data:
+            user.email = data['email']
+        if 'isAdmin' in data:
+            user.isAdmin = data['isAdmin']
+        if 'salary_per_hr' in data:
+            user.salary_per_hr = float(data['salary_per_hr'])  # Explicitly cast to float
+
+        # Save the updated user object
+        user.save()
+
+        # Serialize the updated user data
+        updated_data = {
+            'id': user.id,
+            'username': user.username,
+            'phone': user.phone,
+            'email': user.email,
+            'isAdmin': user.isAdmin,
+            'salary_per_hr': user.salary_per_hr
+        }
+        return Response(updated_data, status=status.HTTP_200_OK)
+    except CustomUser.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
