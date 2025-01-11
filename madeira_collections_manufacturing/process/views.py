@@ -8,7 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from process.process_details_serializer import ProcessDetailsSerializer
 from process.models import ProcessDetails
-from order.orderSerializer import OrderSerializer
+from order.OrderSerializer import OrderSerializer
 from order.models import Order
 from user_manager.models import CustomUser
 from user_manager.serializer import UserSerializer as ManagerSerializer
