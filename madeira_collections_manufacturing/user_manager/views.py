@@ -26,25 +26,20 @@ def send_custom_mail(user_email):
 
 @api_view(['POST'])
 def create_user(request):
-    print("create_user")
-    # return Response({'message': 'user created'}, status= status.HTTP_201_CREATED)
     try:
         if request.method == 'POST':
             validation_check_status = validate_user_data(request.data, 'user-creation')
-            print("validation_check_status", validation_check_status)
             if validation_check_status[0] ==  False:
                 check_status_response = validation_check_status[1]
                 return Response({"message":check_status_response}, status=status.HTTP_406_NOT_ACCEPTABLE)
             _data = request.data
             serializer = UserSerializer(data= _data, many = False)
-            print(serializer)
             if serializer.is_valid():
                 user = CustomUser.objects.create(name= serializer.validated_data['name'], email = serializer.validated_data['email'],
                                                 phone = serializer.validated_data['phone'], age= serializer.validated_data['age'],
                                                 isAdmin = serializer.validated_data['isAdmin'], username=serializer.validated_data['name'],)
                 user.set_password(_data['password'])
                 user.save()
-                # send_custom_mail(serializer.validated_data['email'])
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors)
         return Response(status= status.HTTP_405_METHOD_NOT_ALLOWED)
@@ -97,7 +92,6 @@ def login_view(request):
 @permission_classes([IsAuthenticated])  # Optional: Require the user to be authenticated
 def get_all_users(request):
     try:
-        print("inside user")
         users = CustomUser.objects.all()  # Get all users
         serializer = CustomUserSerializer(users, many=True)  # Serialize the queryset
         return Response(serializer.data, status=status.HTTP_200_OK)
