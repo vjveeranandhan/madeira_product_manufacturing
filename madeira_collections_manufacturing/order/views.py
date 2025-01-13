@@ -58,25 +58,47 @@ def retrieve_order(request, pk):
         manager_serialized = UserSerializer(main_manager, many= True)
         carpenter = CustomUser.objects.filter(id=order.carpenter_id.id)
         carpenter_serialized = UserSerializer(carpenter, many= True)
+        
+        material_list = []
+        for material in order.material_ids.all():
+            material_data = Material.objects.get(id = material.id)
+            serialized_material =  MaterialSerializer(material_data)
+            material_list.append(serialized_material.data)
 
-        carpenter_enq_data = {}
+        # carpenter_enq_data = {}
         carpenter_data = []
         for carpenter_enquiry_item in carpenter_enquiry:
             carpenter_enquiry_serializer = CarpenterEnquireSerializer(carpenter_enquiry_item)
-            carpenter_enq_data['carpenter_enquiry_item'] = carpenter_enquiry_serializer.data
-            material_data = Material.objects.filter(id = carpenter_enquiry_item.material_id.id)
-            serialized_material =  MaterialSerializer(material_data, many=True)
-            carpenter_enq_data['material'] = serialized_material.data
-            carpenter_data.append(carpenter_enq_data)
-        
-
+            carpenter_data.append(carpenter_enquiry_serializer.data)
+    
         #Current process data
-
         process_details = ProcessDetails.objects.get(order_id= pk, process_id= order.order_stage_id)
         process_details_serialized = ProcessDetailsSerializer(process_details)
 
+        workers_list=[]
+        for worker in process_details.process_workers_id.all():
+            worker_obj = CustomUser.objects.get(id=worker.id)
+            worker_serialized = UserSerializer(worker_obj)
+            workers_list.append(worker_serialized.data)
+
+        process_manager_obj = CustomUser.objects.get(id=process_details.process_manager_id.id)
+        process_manager_serialized = UserSerializer(process_manager_obj)
+        workers_list.append(process_manager_serialized.data)
+
         process_materials = ProcessMaterials.objects.filter(process_details_id = process_details_serialized.data['id'])
-        process_materials_serialized = ProcessMaterialsSerializer(process_materials, many= True)
+        
+        process_material_dict = {}
+        current_process_materials=[]
+        for process_material in process_materials:
+            print(process_material.material_id)
+            material_data = Material.objects.get(id = process_material.material_id.id)
+            process_material_dict['process_material_id'] = process_material.material_id.id
+            process_material_dict['material_id'] = material_data.id
+            process_material_dict['material_name'] = material_data.name
+            process_material_dict['material_quantity'] = process_material.quantity
+            process_material_dict['material_price'] = material_data.price
+            process_material_dict['total_price'] = process_material.total_price
+            current_process_materials.append(process_material_dict)
 
         process = Process.objects.get(id= order.order_stage_id.id)
         process_serialised = ProcessSerializer(process)
@@ -84,28 +106,11 @@ def retrieve_order(request, pk):
         current_process = {
                 'process': process_serialised.data,
                 'process_details': process_details_serialized.data,
-                'process_materials': process_materials_serialized.data
+                'process_materials': current_process_materials,
+                'workers_list': workers_list
         }
-
-        #Completed process Details
-        # completed_process_list = []
-        # for process in order.completed_processes.all():
-        #     process_details = ProcessDetails.objects.get(order_id= pk, process_id= order.order_stage_id)
-        #     process_details_serialized = ProcessDetailsSerializer(process_details)
-
-        #     process_materials = ProcessMaterials.objects.filter(process_details_id = process_details_serialized.data['id'])
-        #     process_materials_serialized = ProcessMaterialsSerializer(process_materials, many= True)
-
-        #     process = Process.objects.get(id= order.order_stage_id.id)
-        #     process_serialised = ProcessSerializer(process)
-
-        #     current_process = {
-        #             'process': process_serialised.data,
-        #             'process_details': process_details_serialized.data,
-        #             'process_materials': process_materials_serialized.data
-        #     }
-
         return Response({'order_data': order_serializer.data,
+                         'materials': material_list,
                           'carpenter_enquiry_data': carpenter_data,
                           'main_manager': manager_serialized.data,
                           'carpenter': carpenter_serialized.data,
@@ -163,6 +168,26 @@ def delete_order(request, pk):
 def list_orders(request):
     try:
         orders = Order.objects.all()
+        serializer = OrderSerializer(orders, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=404)
+    
+
+#----------------Main Manager API's-----------------------------
+
+# Retrieve manager order list
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def retrieve_manager_orders(request, manager_id):
+    try:
+        print(f"Received manager_id: {manager_id}")
+        orders = Order.objects.filter(main_manager_id=manager_id)
+        if not orders.exists():
+            return Response(
+                {"message": "No orders found for the given manager."}, 
+                status=status.HTTP_200_OK
+            )
         serializer = OrderSerializer(orders, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     except Exception as e:

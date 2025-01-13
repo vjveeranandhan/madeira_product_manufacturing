@@ -128,6 +128,6 @@ def delete_material(request, pk):
     try:
         material = Material.objects.get(pk=pk)
         material.delete()
-        return Response({"message": "Material deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+        return Response({"message": "Material deleted successfully"}, status=status.HTTP_200_OK)
     except Material.DoesNotExist:
         return Response({"error": "Material not found"}, status=status.HTTP_404_NOT_FOUND)
