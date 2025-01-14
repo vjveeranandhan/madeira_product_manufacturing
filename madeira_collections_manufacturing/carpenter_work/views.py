@@ -30,13 +30,6 @@ def list_carpenter_requests(request, carpenter_id):
                 'product_name_mal': order.product_name_mal,
                 'product_description': order.product_description,
                 'product_description_mal': order.product_description_mal,
-                'material_ids': material_list,
-                'product_length': order.product_length,
-                'product_height': order.product_height,
-                'product_width': order.product_width,
-                'reference_image': order.reference_image.url if order.reference_image else None,
-                'finish': order.finish,
-                'event': order.event
             }
             orders_data.append(order_data)
         return JsonResponse({'order_data': orders_data})

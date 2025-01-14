@@ -7,7 +7,7 @@ class OrderImageSerializer(serializers.ModelSerializer):
         fields = ['id', 'image']
 
 class OrderSerializer(serializers.ModelSerializer):
-    images = OrderImageSerializer(many=True, read_only=True)
+    images = OrderImageSerializer(many=True)
 
     class Meta:
         model = Order

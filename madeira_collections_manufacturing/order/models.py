@@ -6,9 +6,10 @@ from process.models import Process
 
 class Order(models.Model):
     STATUS_CHOICES = [
+        ('initiated', 'Initiated'),
         ('requested', 'Requested'),
         ('checking', 'Checking'),
-        ('completed', 'Completed)'),
+        ('completed', 'Completed'),
     ]
     PRIORITY_CHOICES = [
         ('low', 'Low'),
@@ -20,7 +21,8 @@ class Order(models.Model):
         ('enquiry', 'Enquiry'),
         ('on_going', 'On Going'),
         ('over_due', 'Over due'),
-        ('completed', 'Completed)'),
+        ('completed', 'Completed'),
+        ('archived', 'Archived'),
     ] 
     priority = models.CharField(
         max_length=10,
@@ -58,7 +60,7 @@ class Order(models.Model):
     # carpenter_work_cost = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     # carpenter_work_completion_date = models.DateField(blank=True, null=True)
     completed_processes = models.ManyToManyField(Process, blank=True, related_name='process')
-    enquiry_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='requested', help_text="Status of the enquiry")
+    enquiry_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='initiated', help_text="Status of the enquiry")
 
     # material_length = models.FloatField(help_text="Length in feet", blank=True, null=True)
     # material_height = models.FloatField(help_text="Height in feel", blank=True, null=True)

@@ -34,15 +34,7 @@ def create_order(request):
         carpenter_id = CustomUser.objects.filter(id=data['carpenter_id']).first()
 
         if serializer.is_valid():
-            order = serializer.save()
-            for material_id in serializer.data['material_ids']:
-                material_instance = Material.objects.filter(id=int(material_id)).first()
-                CarpenterEnquire.objects.create(
-                    order_id=order,
-                    material_id=material_instance,
-                    carpenter_id=carpenter_id,
-                    status='requested'
-                )
+            serializer.save()
             order_obj = Order.objects.filter(id=serializer.data['id']).first()
             for image in reference_images:
                 order_image = OrderImage.objects.create(
@@ -56,11 +48,22 @@ def create_order(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=404)
 
+# List all orders
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_orders(request, order_status):
+    try:
+        orders = Order.objects.filter(status= order_status)
+        serializer = OrderSerializer(orders, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=404)
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def retrieve_order(request, pk):
     try:
-        order = Order.objects.get(pk=pk)
+        order = Order.objects.filter(pk=pk).first()
         order_serializer = OrderSerializer(order)
         carpenter_enquiry = CarpenterEnquire.objects.filter(order_id=order.id)
         main_manager = CustomUser.objects.filter(id=order.main_manager_id.id)
@@ -98,7 +101,6 @@ def retrieve_order(request, pk):
             process_material_dict = {}
             current_process_materials=[]
             for process_material in process_materials:
-                print(process_material.material_id)
                 material_data = Material.objects.get(id = process_material.material_id.id)
                 process_material_dict['process_material_id'] = process_material.material_id.id
                 process_material_dict['material_id'] = material_data.id
@@ -118,23 +120,23 @@ def retrieve_order(request, pk):
                     'workers_list': workers_list
             }
             return Response({'order_data': order_serializer.data,
-                             'images': image_serilized.data,
-                         'materials': material_list,
-                          'carpenter_enquiry_data': carpenter_data,
-                          'main_manager': manager_serialized.data,
-                          'carpenter': carpenter_serialized.data,
-                          'current_process': current_process
-                          },
+                            # 'images': image_serilized.data,
+                        'materials': material_list,
+                        'carpenter_enquiry_data': carpenter_data,
+                        'main_manager': manager_serialized.data,
+                        'carpenter': carpenter_serialized.data,
+                        'current_process': current_process
+                        },
                             status=status.HTTP_200_OK)
         return Response({   'order_data': order_serializer.data,
-                             'images': image_serilized.data,
+                            # 'images': image_serilized.data,
                             'main_manager': manager_serialized.data,
                             'materials': material_list,
                             'carpenter': carpenter_serialized.data,
                             'carpenter_enquiry_data': carpenter_data,
                         #   'current_process': current_process
-                          },
-                            status=status.HTTP_200_OK)
+                        },
+                        status=status.HTTP_200_OK)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=404)
 
@@ -147,22 +149,23 @@ def update_order(request, pk):
     except Order.DoesNotExist:
         return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
     try:
-        serializer = OrderSerializer(order, data=request.data)
-        carpenter_id = CustomUser.objects.get(id=request.data['carpenter_id'])
+        if order.status != 'enquiry':
+            return Response({'error': 'Order is confirmed can\'t modify it'}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = OrderSerializer(order, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            carpenter_enquiry = CarpenterEnquire.objects.filter(order_id=order.id)
-            carpenter_enquiry.delete()
-            for material_id in serializer.data['material_ids']:
-                material_instance = Material.objects.get(id=material_id)
-                carpenter_enquire = CarpenterEnquire.objects.create(
-                order_id= order,
-                material_id=material_instance,
-                carpenter_id=carpenter_id,
-                status='requested'
-                )
-                carpenter_enquire.save()       
+            reference_images = request.FILES.getlist('reference_image')
+            if reference_images:
+                images = OrderImage.objects.filter(order= order.id)
+                images.delete()
+                for image in reference_images:
+                    order_image = OrderImage.objects.create(
+                        image = image,
+                        order = order
+                    )
+                    order_image.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=404)
@@ -172,41 +175,67 @@ def update_order(request, pk):
 @permission_classes([IsAuthenticated])
 def delete_order(request, pk):
     try:
-        order = Order.objects.get(pk=pk)
+        order = Order.objects.filter(pk=pk).first()
+        if order.status != 'enquiry':
+            return Response({'error': 'Order is confirmed can\'t delete it'}, status=status.HTTP_400_BAD_REQUEST)
         order.delete()
-        carpenter_enquiry = CarpenterEnquire.objects.filter(order_id=order.id)
-        carpenter_enquiry.delete()
         return Response({'message': 'Order deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=404)
     
-# List all orders
-@api_view(['GET'])
+#----------------Carpenter Request------------------------------
+
+# Create a new order
+@api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def list_orders(request):
+def create_carpenter_request(request, order_id):
     try:
-        orders = Order.objects.all()
-        serializer = OrderSerializer(orders, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        order = Order.objects.filter(id = order_id).first()    
+        serializer = OrderSerializer(data=order)
+        for material_id in serializer.data['material_ids']:
+            material_instance = Material.objects.filter(id=int(material_id)).first()
+            CarpenterEnquire.objects.create(
+                order_id=order,
+                material_id=material_instance,
+                carpenter_id=serializer.data['carpenter_id'],
+                status='requested'
+            )
+        order.enquiry_status = 'requested'
+        order.save()
+        return Response({'msg': 'Success'}, status=status.HTTP_200_OK)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=404)
-    
+
 
 #----------------Main Manager API's-----------------------------
 
 # Retrieve manager order list
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def retrieve_manager_orders(request, manager_id):
+def list_manager_orders(request, manager_id, order_status):
     try:
         print(f"Received manager_id: {manager_id}")
-        orders = Order.objects.filter(main_manager_id=manager_id)
+        orders = Order.objects.filter(main_manager_id=manager_id, status=order_status)
         if not orders.exists():
             return Response(
                 {"message": "No orders found for the given manager."}, 
                 status=status.HTTP_200_OK
             )
         serializer = OrderSerializer(orders, many=True)
+        for order in serializer.data:
+            order.pop('images', None)  # Removes 'field1' if it exists
+            order.pop('estimated_price', None)
+            order.pop('customer_name', None)
+            order.pop('contact_number', None)
+            order.pop('whatsapp_number', None)
+            order.pop('email', None)
+            order.pop('material_cost', None)
+            order.pop('ongoing_expense', None)
+            order.pop('main_manager_id', None)
+            order.pop('material_ids', None)
+            order.pop('carpenter_id', None)
+            order.pop('current_process', None)
+            order.pop('completed_processes', None)
         return Response(serializer.data, status=status.HTTP_200_OK)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=404)
