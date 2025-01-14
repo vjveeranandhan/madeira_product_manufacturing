@@ -3,8 +3,8 @@ from rest_framework.decorators import api_view
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework import status
-from .models import Order
-from .OrderSerializer import OrderSerializer
+from .models import Order, OrderImage
+from .OrderSerializer import OrderSerializer, OrderImageSerializer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from carpenter_work.models import CarpenterEnquire
@@ -26,27 +26,36 @@ from process.process_details_serializer import ProcessDetailsSerializer, Process
 @permission_classes([IsAuthenticated])
 def create_order(request):
     try:
-        serializer = OrderSerializer(data=request.data)
         data = request.data
-        carpenter_id = CustomUser.objects.get(id=data['carpenter_id'])
+        print(data)
+        reference_images = request.FILES.getlist('reference_image') 
+        data.pop('reference_image', None)
+        serializer = OrderSerializer(data=data)
+        carpenter_id = CustomUser.objects.filter(id=data['carpenter_id']).first()
+
         if serializer.is_valid():
-            serializer.save()
-            order = Order.objects.get(id = serializer.data['id'])
+            order = serializer.save()
             for material_id in serializer.data['material_ids']:
-                material_instance = Material.objects.get(id=material_id)
-                carpenter_enquire = CarpenterEnquire.objects.create(
-                order_id= order,
-                material_id=material_instance,
-                carpenter_id=carpenter_id,
-                status='requested'
+                material_instance = Material.objects.filter(id=int(material_id)).first()
+                CarpenterEnquire.objects.create(
+                    order_id=order,
+                    material_id=material_instance,
+                    carpenter_id=carpenter_id,
+                    status='requested'
                 )
-                carpenter_enquire.save()            
+            order_obj = Order.objects.filter(id=serializer.data['id']).first()
+            for image in reference_images:
+                order_image = OrderImage.objects.create(
+                    image = image,
+                    order = order_obj
+                )
+                order_image.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=404)
-    
-# Retrieve a single order
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def retrieve_order(request, pk):
@@ -58,6 +67,8 @@ def retrieve_order(request, pk):
         manager_serialized = UserSerializer(main_manager, many= True)
         carpenter = CustomUser.objects.filter(id=order.carpenter_id.id)
         carpenter_serialized = UserSerializer(carpenter, many= True)
+        images = OrderImage.objects.filter(order= pk).all()
+        image_serilized = OrderImageSerializer(images, many=True)
         
         material_list = []
         for material in order.material_ids.all():
@@ -70,51 +81,58 @@ def retrieve_order(request, pk):
         for carpenter_enquiry_item in carpenter_enquiry:
             carpenter_enquiry_serializer = CarpenterEnquireSerializer(carpenter_enquiry_item)
             carpenter_data.append(carpenter_enquiry_serializer.data)
-    
-        #Current process data
-        process_details = ProcessDetails.objects.get(order_id= pk, process_id= order.order_stage_id)
-        process_details_serialized = ProcessDetailsSerializer(process_details)
-
-        workers_list=[]
-        for worker in process_details.process_workers_id.all():
-            worker_obj = CustomUser.objects.get(id=worker.id)
-            worker_serialized = UserSerializer(worker_obj)
-            workers_list.append(worker_serialized.data)
-
-        process_manager_obj = CustomUser.objects.get(id=process_details.process_manager_id.id)
-        process_manager_serialized = UserSerializer(process_manager_obj)
-        workers_list.append(process_manager_serialized.data)
-
-        process_materials = ProcessMaterials.objects.filter(process_details_id = process_details_serialized.data['id'])
         
-        process_material_dict = {}
-        current_process_materials=[]
-        for process_material in process_materials:
-            print(process_material.material_id)
-            material_data = Material.objects.get(id = process_material.material_id.id)
-            process_material_dict['process_material_id'] = process_material.material_id.id
-            process_material_dict['material_id'] = material_data.id
-            process_material_dict['material_name'] = material_data.name
-            process_material_dict['material_quantity'] = process_material.quantity
-            process_material_dict['material_price'] = material_data.price
-            process_material_dict['total_price'] = process_material.total_price
-            current_process_materials.append(process_material_dict)
+        #Current process data
+        process_details = ProcessDetails.objects.filter(order_id=pk).first()
+        if process_details:
+            process_details_serialized = ProcessDetailsSerializer(process_details)
 
-        process = Process.objects.get(id= order.order_stage_id.id)
-        process_serialised = ProcessSerializer(process)
+            workers_list=[]
+            for worker in process_details.process_workers_id.all():
+                worker_obj = CustomUser.objects.get(id=worker.id)
+                worker_serialized = UserSerializer(worker_obj)
+                workers_list.append(worker_serialized.data)
 
-        current_process = {
-                'process': process_serialised.data,
-                'process_details': process_details_serialized.data,
-                'process_materials': current_process_materials,
-                'workers_list': workers_list
-        }
-        return Response({'order_data': order_serializer.data,
+            process_materials = ProcessMaterials.objects.filter(process_details_id = process_details_serialized.data['id'])
+            
+            process_material_dict = {}
+            current_process_materials=[]
+            for process_material in process_materials:
+                print(process_material.material_id)
+                material_data = Material.objects.get(id = process_material.material_id.id)
+                process_material_dict['process_material_id'] = process_material.material_id.id
+                process_material_dict['material_id'] = material_data.id
+                process_material_dict['material_name'] = material_data.name
+                process_material_dict['material_quantity'] = process_material.quantity
+                process_material_dict['material_price'] = material_data.price
+                process_material_dict['total_price'] = process_material.total_price
+                current_process_materials.append(process_material_dict)
+
+            process = Process.objects.get(id= order.order_stage_id.id)
+            process_serialised = ProcessSerializer(process)
+
+            current_process = {
+                    'process': process_serialised.data,
+                    'process_details': process_details_serialized.data,
+                    'process_materials': current_process_materials,
+                    'workers_list': workers_list
+            }
+            return Response({'order_data': order_serializer.data,
+                             'images': image_serilized.data,
                          'materials': material_list,
                           'carpenter_enquiry_data': carpenter_data,
                           'main_manager': manager_serialized.data,
                           'carpenter': carpenter_serialized.data,
                           'current_process': current_process
+                          },
+                            status=status.HTTP_200_OK)
+        return Response({   'order_data': order_serializer.data,
+                             'images': image_serilized.data,
+                            'main_manager': manager_serialized.data,
+                            'materials': material_list,
+                            'carpenter': carpenter_serialized.data,
+                            'carpenter_enquiry_data': carpenter_data,
+                        #   'current_process': current_process
                           },
                             status=status.HTTP_200_OK)
     except Exception as e:

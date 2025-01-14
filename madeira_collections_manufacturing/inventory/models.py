@@ -18,7 +18,9 @@ class Material(models.Model):
         ('out_of_stock', 'Out of Stock'),
     ]
     name = models.CharField(max_length=100, unique=True)
+    name_mal = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True, null=True)
+    description_mal = models.TextField(blank=True, null=True)
     colour = models.TextField(blank=True, null=True)
     quality = models.TextField(blank=True, null=True)
     quantity = models.IntegerField(blank=True, null=True)
@@ -29,7 +31,7 @@ class Material(models.Model):
         default='in_stock'
     )
     price = models.FloatField(default=0.0)
-    category = models.ForeignKey('InventoryCategory', on_delete=models.CASCADE, related_name='materials')
+    category = models.ForeignKey('InventoryCategory', on_delete=models.PROTECT, related_name='materials')
 
     def __str__(self):
         return self.name

@@ -4,4 +4,4 @@ from .models import Material
 class MaterialSerializer(serializers.ModelSerializer):
     class Meta:
         model = Material
-        fields = ['id', 'name', 'description', 'colour', 'quality', 'durability', 'stock_availability', 'category', 'price', 'quantity']
+        fields = ['id', 'name', 'name_mal', 'description', 'description_mal','colour', 'quality', 'durability', 'stock_availability', 'category', 'price', 'quantity']

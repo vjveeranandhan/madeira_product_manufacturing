@@ -12,18 +12,6 @@ from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.shortcuts import get_object_or_404
 
-# Create your views here.
-
-def send_custom_mail(user_email):
-    subject = 'Tourneyhub'
-    message = 'Welcome to Tourneyhub!'
-    from_email = settings.EMAIL_HOST_USER
-    recipient_list = [user_email]
-    try:
-        django_send_mail(subject, message, from_email, recipient_list)
-    except Exception as e:
-        return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
 @api_view(['POST'])
 def create_user(request):
     try:
@@ -37,7 +25,8 @@ def create_user(request):
             if serializer.is_valid():
                 user = CustomUser.objects.create(name= serializer.validated_data['name'], email = serializer.validated_data['email'],
                                                 phone = serializer.validated_data['phone'], age= serializer.validated_data['age'],
-                                                isAdmin = serializer.validated_data['isAdmin'], username=serializer.validated_data['name'],)
+                                                isAdmin = serializer.validated_data['isAdmin'], username=serializer.validated_data['name'],
+                                                 salary_per_hr=serializer.validated_data['salary_per_hr'])
                 user.set_password(_data['password'])
                 user.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
