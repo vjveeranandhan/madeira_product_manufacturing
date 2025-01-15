@@ -110,8 +110,8 @@ def update_user_by_id(request, user_id):
         
         data = request.data
         
-        if 'username' in data:
-            user.username = data['username']
+        if 'name' in data:
+            user.name = data['name']
         if 'phone' in data:
             user.phone = data['phone']
         if 'email' in data:
@@ -123,7 +123,7 @@ def update_user_by_id(request, user_id):
         user.save()
         updated_data = {
             'id': user.id,
-            'username': user.username,
+            'name': user.name,
             'phone': user.phone,
             'email': user.email,
             'isAdmin': user.isAdmin,

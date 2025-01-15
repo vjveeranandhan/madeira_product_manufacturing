@@ -3,7 +3,7 @@ from user_manager.views import create_user, delete_user, login_view, get_all_use
 from inventory.views import get_all_categories, create_category, get_category, update_category, delete_category
 from inventory.views import get_all_materials, create_material, get_material, update_material, delete_material
 from process.views import get_all_processes, create_process, update_process, delete_process, get_process
-from order.views import list_orders, create_order, retrieve_order, update_order, delete_order, list_manager_orders
+from order.views import list_orders, create_order, retrieve_order, update_order, delete_order, list_manager_orders, create_carpenter_request
 from django.conf import settings
 from django.conf.urls.static import static
 from carpenter_work.views import list_carpenter_requests, carpenter_request_accept, carpenter_request_respond, carpenter_request_material_creation
@@ -45,11 +45,11 @@ urlpatterns = [
      #------------ ADMIN API's------------------------------------
      path('orders/create/', create_order, name='create_order'),
      path('orders/<int:pk>/update/', update_order, name='update_order'),
-     # path('orders/<int:pk>/delete/', delete_order, name='delete_order'),
-
+     path('orders/carpenter-request/<int:order_id>/', create_carpenter_request, name='create_carpenter_request'),
+     path('orders/<int:pk>/delete/', delete_order, name='delete_order'),
+     path('orders/status/<str:order_status>/', list_orders, name='list_orders'),
 
      #--------------Common API's----------------------------------
-     path('orders/status/<str:order_status>/', list_orders, name='list_orders'),
      path('orders/<int:pk>/', retrieve_order, name='retrieve_order'),
 
      #--------------Manager API's---------------------------------

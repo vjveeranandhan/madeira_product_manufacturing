@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework import status
 from .models import Order, OrderImage
-from .OrderSerializer import OrderSerializer, OrderImageSerializer
+from .OrderSerializer import OrderSerializer, OrderImageSerializer, OrderCreateSerializer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from carpenter_work.models import CarpenterEnquire
@@ -20,29 +20,24 @@ from process.models import Process
 from process.ProcessSerializer import ProcessSerializer
 from process.process_details_serializer import ProcessDetailsSerializer, ProcessMaterialsSerializer
 
-
 # Create a new order
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_order(request):
     try:
-        data = request.data
-        print(data)
+        data = request.data.copy() 
         reference_images = request.FILES.getlist('reference_image') 
         data.pop('reference_image', None)
-        serializer = OrderSerializer(data=data)
-
+        serializer = OrderCreateSerializer(data=data)
+        print(reference_images)
         if serializer.is_valid():
-            serializer.save()
-            order_obj = Order.objects.filter(id=serializer.data['id']).first()
+            order_obj = serializer.save()
             for image in reference_images:
-                order_image = OrderImage.objects.create(
-                    image = image,
-                    order = order_obj
+                OrderImage.objects.create(
+                    image=image,
+                    order=order_obj
                 )
-                order_image.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=404)
@@ -69,8 +64,6 @@ def retrieve_order(request, pk):
         manager_serialized = UserSerializer(main_manager, many= True)
         carpenter = CustomUser.objects.filter(id=order.carpenter_id.id)
         carpenter_serialized = UserSerializer(carpenter, many= True)
-        images = OrderImage.objects.filter(order= pk).all()
-        image_serilized = OrderImageSerializer(images, many=True)
         
         material_list = []
         for material in order.material_ids.all():
@@ -148,7 +141,7 @@ def update_order(request, pk):
     except Order.DoesNotExist:
         return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
     try:
-        if order.status != 'enquiry' and order.enquiry_status != 'Initiated':
+        if order.status != 'enquiry' or order.enquiry_status != 'Initiated':
             return Response({'error': 'Order is confirmed can\'t modify it'}, status=status.HTTP_400_BAD_REQUEST)
         serializer = OrderSerializer(order, data=request.data, partial=True)
         if serializer.is_valid():
@@ -164,7 +157,6 @@ def update_order(request, pk):
                     )
                     order_image.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
-
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=404)
@@ -175,7 +167,7 @@ def update_order(request, pk):
 def delete_order(request, pk):
     try:
         order = Order.objects.filter(pk=pk).first()
-        if order.status != 'enquiry' and order.enquiry_status != 'Initiated':
+        if order.status != 'enquiry' or order.enquiry_status != 'Initiated':
             return Response({'error': 'Order is confirmed can\'t delete it'}, status=status.HTTP_400_BAD_REQUEST)
         order.delete()
         return Response({'message': 'Order deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
@@ -184,19 +176,19 @@ def delete_order(request, pk):
 
 #----------------Carpenter Request------------------------------
 
-# Create a new order
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_carpenter_request(request, order_id):
     try:
         order = Order.objects.filter(id = order_id).first()    
-        serializer = OrderSerializer(data=order)
-        for material_id in serializer.data['material_ids']:
-            material_instance = Material.objects.filter(id=int(material_id)).first()
+        if order is None:
+            return JsonResponse({'error': 'Order not found'}, status=404)
+        for material_id in order.material_ids.all():
+            material_instance = Material.objects.filter(id=int(material_id.id)).first()
             CarpenterEnquire.objects.create(
                 order_id=order,
                 material_id=material_instance,
-                carpenter_id=serializer.data['carpenter_id'],
+                carpenter_id=order.carpenter_id,
                 status='requested'
             )
         order.enquiry_status = 'requested'
