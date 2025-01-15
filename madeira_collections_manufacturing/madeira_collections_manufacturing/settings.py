@@ -144,8 +144,8 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),  # Token expires in 1 day
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),  # Refresh token expires in 7 days
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=365*100),  # Token lifetime set to 100 years
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=365*100),  # Refresh token lifetime set to 100 years
     'ROTATE_REFRESH_TOKENS': False,  # Set to True to rotate refresh tokens
     'BLACKLIST_AFTER_ROTATION': False,
     'ALGORITHM': 'HS256',  # You can change the algorithm if necessary

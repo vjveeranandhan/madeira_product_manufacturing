@@ -46,7 +46,7 @@ def delete_user(request, user_id):
         return Response({'message': 'Invalid user id'})
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
+    
 @api_view(['POST'])
 def login_view(request):
     try:
@@ -54,15 +54,12 @@ def login_view(request):
         password = request.data.get('password')
         if not phone or not password:
             return Response({'error': 'Phone number and password are required.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Authenticate user
         user = CustomUser.objects.get(phone=phone) 
         if user is None:
             return Response({'error': 'Invalid phone number or password.'}, status=status.HTTP_401_UNAUTHORIZED)
         if user.check_password(password):
             refresh = RefreshToken.for_user(user)
             access_token = str(refresh.access_token)
-
             return Response({
                 'refresh': str(refresh),
                 'access': access_token,
@@ -78,21 +75,20 @@ def login_view(request):
         return Response({'error': 'Invalid user'}, status=status.HTTP_400_BAD_REQUEST)
     
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])  # Optional: Require the user to be authenticated
+@permission_classes([IsAuthenticated])
 def get_all_users(request):
     try:
-        users = CustomUser.objects.all()  # Get all users
-        serializer = CustomUserSerializer(users, many=True)  # Serialize the queryset
+        users = CustomUser.objects.all()
+        serializer = CustomUserSerializer(users, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])  # Ensure the user is authenticated
+@permission_classes([IsAuthenticated])
 def get_user_by_id(request, user_id):
     try:
         user = get_object_or_404(CustomUser, id=user_id)
-        # You can serialize the user data if needed, for now returning raw data
         data = {
             'id': user.id,
             'username': user.username,
@@ -107,16 +103,13 @@ def get_user_by_id(request, user_id):
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['PUT'])
-@permission_classes([IsAuthenticated])  # Ensure the user is authenticated
+@permission_classes([IsAuthenticated])
 def update_user_by_id(request, user_id):
     try:
-        # Retrieve the user object
         user = get_object_or_404(CustomUser, id=user_id)
         
-        # Extract the fields from the request data
         data = request.data
         
-        # Update only the fields provided in the request
         if 'username' in data:
             user.username = data['username']
         if 'phone' in data:
@@ -126,12 +119,8 @@ def update_user_by_id(request, user_id):
         if 'isAdmin' in data:
             user.isAdmin = data['isAdmin']
         if 'salary_per_hr' in data:
-            user.salary_per_hr = float(data['salary_per_hr'])  # Explicitly cast to float
-
-        # Save the updated user object
+            user.salary_per_hr = float(data['salary_per_hr'])
         user.save()
-
-        # Serialize the updated user data
         updated_data = {
             'id': user.id,
             'username': user.username,

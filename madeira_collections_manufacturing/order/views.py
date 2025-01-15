@@ -31,7 +31,6 @@ def create_order(request):
         reference_images = request.FILES.getlist('reference_image') 
         data.pop('reference_image', None)
         serializer = OrderSerializer(data=data)
-        carpenter_id = CustomUser.objects.filter(id=data['carpenter_id']).first()
 
         if serializer.is_valid():
             serializer.save()
@@ -149,7 +148,7 @@ def update_order(request, pk):
     except Order.DoesNotExist:
         return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
     try:
-        if order.status != 'enquiry':
+        if order.status != 'enquiry' and order.enquiry_status != 'Initiated':
             return Response({'error': 'Order is confirmed can\'t modify it'}, status=status.HTTP_400_BAD_REQUEST)
         serializer = OrderSerializer(order, data=request.data, partial=True)
         if serializer.is_valid():
@@ -169,20 +168,20 @@ def update_order(request, pk):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=404)
-    
+
 # Delete an order
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 def delete_order(request, pk):
     try:
         order = Order.objects.filter(pk=pk).first()
-        if order.status != 'enquiry':
+        if order.status != 'enquiry' and order.enquiry_status != 'Initiated':
             return Response({'error': 'Order is confirmed can\'t delete it'}, status=status.HTTP_400_BAD_REQUEST)
         order.delete()
         return Response({'message': 'Order deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=404)
-    
+
 #----------------Carpenter Request------------------------------
 
 # Create a new order
@@ -206,7 +205,6 @@ def create_carpenter_request(request, order_id):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=404)
 
-
 #----------------Main Manager API's-----------------------------
 
 # Retrieve manager order list
@@ -214,7 +212,6 @@ def create_carpenter_request(request, order_id):
 @permission_classes([IsAuthenticated])
 def list_manager_orders(request, manager_id, order_status):
     try:
-        print(f"Received manager_id: {manager_id}")
         orders = Order.objects.filter(main_manager_id=manager_id, status=order_status)
         if not orders.exists():
             return Response(
