@@ -6,7 +6,8 @@ from process.views import get_all_processes, create_process, update_process, del
 from order.views import list_orders, create_order, retrieve_order, update_order, delete_order, list_manager_orders, create_carpenter_request
 from django.conf import settings
 from django.conf.urls.static import static
-from carpenter_work.views import list_carpenter_requests, carpenter_request_accept, carpenter_request_respond, carpenter_request_material_creation
+from carpenter_work.views import list_carpenter_requests, carpenter_request_accept, carpenter_request_view
+# carpenter_request_respond, carpenter_request_material_creation
 from process.views import create_process_details, list_process_details, get_process_details, accept_process_details, delete_process_details
 from process.views import create_process_material, retrieve_process_material, update_process_material, delete_process_material
 
@@ -55,13 +56,17 @@ urlpatterns = [
      #--------------Manager API's---------------------------------
 
      path('orders/manager/<int:manager_id>/<str:order_status>/', list_manager_orders, name='list_manager_orders'),
-     path('orders/manager/<int:pk>/', retrieve_order, name='retrieve_order'),
+    #   path('orders/manager/<int:pk>/', retrieve_order, name='retrieve_order'),
+     
+     #--------------Carpenter API's---------------------------------
 
-
-
-     path('carpenter_requests/<int:carpenter_id>/', list_carpenter_requests, name='get_carpenter_requests'),
-#     path('carpenter_requests/<int:order_id>/<int:carpenter_id>/accept/',
-#          carpenter_request_accept, name='accept_carpenter_request'),
+    #List Carpenter Request
+    path('carpenter_requests/<int:carpenter_id>/', list_carpenter_requests, name='get_carpenter_requests'),
+    #Accept Carpenter Request
+    path('carpenter_requests/<int:order_id>/accept/',carpenter_request_accept, name='accept_carpenter_request'),
+    #View Carpenter Request
+    path('carpenter_requests/<int:order_id>/view/',carpenter_request_view, name='accept_carpenter_request'),
+    
 #     path('carpenter_requests/<int:order_id>/<int:carpenter_id>/respond/',
 #          carpenter_request_respond, name='accept_carpenter_request'),
 #     path('carpenter_requests/<int:order_id>/<int:carpenter_id>/<int:carpenter_request_id>/<int:material_id>/create/',
