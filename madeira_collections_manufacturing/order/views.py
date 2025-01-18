@@ -19,6 +19,11 @@ from process.models import ProcessDetails, ProcessMaterials
 from process.models import Process
 from process.ProcessSerializer import ProcessSerializer
 from process.process_details_serializer import ProcessDetailsSerializer, ProcessMaterialsSerializer
+from inventory.models import InventoryCategory, Material
+from inventory.InventoryCategorySerializer import InventoryCategorySerializer
+from inventory.MaterialSerializer import MaterialSerializer
+from process.ProcessSerializer import ProcessSerializer
+from user_manager.serializer import UserSerializer
 
 # Create a new order
 @api_view(['POST'])
@@ -61,9 +66,9 @@ def retrieve_order(request, pk):
         order_serializer = OrderSerializer(order)
         carpenter_enquiry = CarpenterEnquire.objects.filter(order_id=order.id)
         main_manager = CustomUser.objects.filter(id=order.main_manager_id.id)
-        manager_serialized = UserSerializer(main_manager, many= True)
+        manager_serialized = UserSerializer(main_manager)
         carpenter = CustomUser.objects.filter(id=order.carpenter_id.id)
-        carpenter_serialized = UserSerializer(carpenter, many= True)
+        carpenter_serialized = UserSerializer(carpenter)
         
         material_list = []
         for material in order.material_ids.all():
@@ -228,3 +233,44 @@ def list_manager_orders(request, manager_id, order_status):
         return Response(serializer.data, status=status.HTTP_200_OK)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=404)
+
+@api_view(['GET'])
+def get_order_creation_data(request):
+    """
+    Get all necessary data for creating an order:
+    - Categories
+    - Materials
+    - Processes
+    - Managers
+    """
+    try:
+        # Get all active categories
+        categories = InventoryCategory.objects.all()
+        categories_data = InventoryCategorySerializer(categories, many=True).data
+
+        # Get all active materials
+        materials = Material.objects.all()
+        materials_data = MaterialSerializer(materials, many=True).data
+
+        # Get all active processes
+        processes = Process.objects.all()
+        processes_data = ProcessSerializer(processes, many=True).data
+
+        # Get all managers
+        managers = CustomUser.objects.all()
+        managers_data = UserSerializer(managers, many=True).data
+
+        response_data = {
+            'categories': categories_data,
+            'materials': materials_data,
+            'processes': processes_data,
+            'managers': managers_data
+        }
+
+        return Response(response_data, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )

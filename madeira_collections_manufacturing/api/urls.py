@@ -3,7 +3,10 @@ from user_manager.views import create_user, delete_user, login_view, get_all_use
 from inventory.views import get_all_categories, create_category, get_category, update_category, delete_category
 from inventory.views import get_all_materials, create_material, get_material, update_material, delete_material
 from process.views import get_all_processes, create_process, update_process, delete_process, get_process
-from order.views import list_orders, create_order, retrieve_order, update_order, delete_order, list_manager_orders, create_carpenter_request
+from order.views import (
+    list_orders, create_order, retrieve_order, update_order, delete_order, 
+    list_manager_orders, create_carpenter_request, get_order_creation_data
+)
 from django.conf import settings
 from django.conf.urls.static import static
 from carpenter_work.views import list_carpenter_requests, carpenter_request_accept, carpenter_request_view
@@ -89,6 +92,6 @@ urlpatterns = [
 #     path('process-materials/update/<int:process_material_id>/', update_process_material, name='update_process_material'),
 #     path('process-materials/delete/<int:process_material_id>/', delete_process_material, name='delete_process_material'),
 
-
+    path('orders/creation-data/', get_order_creation_data, name='get_order_creation_data'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
