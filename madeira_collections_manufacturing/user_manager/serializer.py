@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['name', 'age', 'email', 'phone', 'isAdmin', 'salary_per_hr']
+        fields = '__all__'
 
 class UserRetrieveSerializer(serializers.ModelSerializer):
     class Meta:

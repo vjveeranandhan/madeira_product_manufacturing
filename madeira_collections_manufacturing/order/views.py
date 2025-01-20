@@ -10,7 +10,7 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from carpenter_work.models import CarpenterEnquire
 from inventory.models import Material
 from user_manager.models import CustomUser
-from user_manager.serializer import UserSerializer
+from user_manager.serializer import UserSerializer, CustomUserSerializer, UserRetrieveSerializer
 from django.http import JsonResponse
 from carpenter_work.carpenter_enquire_serializer import CarpenterEnquireSerializer
 from inventory.models import Material
@@ -63,6 +63,8 @@ def list_orders(request, order_status):
 def retrieve_order(request, pk):
     try:
         order = Order.objects.filter(pk=pk).first()
+        if not order:
+            return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
         order_serializer = OrderSerializer(order)
         carpenter_enquiry = CarpenterEnquire.objects.filter(order_id=order.id)
         main_manager = CustomUser.objects.filter(id=order.main_manager_id.id)
@@ -146,8 +148,8 @@ def update_order(request, pk):
     except Order.DoesNotExist:
         return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
     try:
-        if order.status != 'enquiry' or order.enquiry_status != 'Initiated':
-            return Response({'error': 'Order is confirmed can\'t modify it'}, status=status.HTTP_400_BAD_REQUEST)
+        # if order.status != 'enquiry' or order.enquiry_status != 'Initiated':
+        #     return Response({'error': 'Order is confirmed can\'t modify it'}, status=status.HTTP_400_BAD_REQUEST)
         serializer = OrderSerializer(order, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -172,8 +174,8 @@ def update_order(request, pk):
 def delete_order(request, pk):
     try:
         order = Order.objects.filter(pk=pk).first()
-        if order.status != 'enquiry' or order.enquiry_status != 'Initiated':
-            return Response({'error': 'Order is confirmed can\'t delete it'}, status=status.HTTP_400_BAD_REQUEST)
+        # if order.status != 'enquiry' or order.enquiry_status != 'Initiated':
+        #     return Response({'error': 'Order is confirmed can\'t delete it'}, status=status.HTTP_400_BAD_REQUEST)
         order.delete()
         return Response({'message': 'Order deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
     except Exception as e:
@@ -244,6 +246,7 @@ def get_order_creation_data(request):
     - Managers
     """
     try:
+        print("get_order_creation_data")
         # Get all active categories
         categories = InventoryCategory.objects.all()
         categories_data = InventoryCategorySerializer(categories, many=True).data
@@ -257,14 +260,15 @@ def get_order_creation_data(request):
         processes_data = ProcessSerializer(processes, many=True).data
 
         # Get all managers
-        managers = CustomUser.objects.all()
-        managers_data = UserSerializer(managers, many=True).data
+        users = CustomUser.objects.all()
+        serializer = CustomUserSerializer(users, many=True)
+        user_data = serializer.data
 
         response_data = {
             'categories': categories_data,
             'materials': materials_data,
             'processes': processes_data,
-            'managers': managers_data
+            'managers': user_data
         }
 
         return Response(response_data, status=status.HTTP_200_OK)

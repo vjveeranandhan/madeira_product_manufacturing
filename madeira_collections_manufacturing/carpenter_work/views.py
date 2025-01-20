@@ -87,28 +87,28 @@ def carpenter_request_view(request, order_id):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=404)
 
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def carpenter_request_respond(request, order_id, carpenter_id):
-#     try:
-#         carpenter_enquiries = CarpenterEnquire.objects.filter(order_id=order_id, carpenter_id = carpenter_id)
-#         for enquiry in carpenter_enquiries:
-#             if (
-#                 enquiry.material_height is None or 
-#                 enquiry.material_length is None or 
-#                 enquiry.material_width is None
-#             ):
-#                 e = 'Missing material details'
-#                 return JsonResponse({'error': str(e)}, status=404)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def carpenter_request_respond(request, order_id, carpenter_id):
+    try:
+        carpenter_enquiries = CarpenterEnquire.objects.filter(order_id=order_id, carpenter_id = carpenter_id)
+        for enquiry in carpenter_enquiries:
+            if (
+                enquiry.material_height is None or 
+                enquiry.material_length is None or 
+                enquiry.material_width is None
+            ):
+                e = 'Missing material details'
+                return JsonResponse({'error': str(e)}, status=404)
 
-#         for enquiry in carpenter_enquiries:
-#             enquiry.status = 'completed'
-#         order = Order.objects.get(id = order_id)
-#         order.enquiry_status = 'completed' 
-#         serializer = CarpenterEnquireSerializer(carpenter_enquiries, many=True)
-#         return Response(serializer.data, status=status.HTTP_200_OK)
-#     except Exception as e:
-#         return JsonResponse({'error': str(e)}, status=404)
+        for enquiry in carpenter_enquiries:
+            enquiry.status = 'completed'
+        order = Order.objects.get(id = order_id)
+        order.enquiry_status = 'completed' 
+        serializer = CarpenterEnquireSerializer(carpenter_enquiries, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=404)
 
 # @api_view(['PUT'])
 # @permission_classes([IsAuthenticated])

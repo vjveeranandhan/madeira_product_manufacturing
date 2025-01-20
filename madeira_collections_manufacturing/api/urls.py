@@ -9,7 +9,7 @@ from order.views import (
 )
 from django.conf import settings
 from django.conf.urls.static import static
-from carpenter_work.views import list_carpenter_requests, carpenter_request_accept, carpenter_request_view
+from carpenter_work.views import list_carpenter_requests, carpenter_request_accept, carpenter_request_view, carpenter_request_respond
 # carpenter_request_respond, carpenter_request_material_creation
 from process.views import create_process_details, list_process_details, get_process_details, accept_process_details, delete_process_details
 from process.views import create_process_material, retrieve_process_material, update_process_material, delete_process_material
@@ -70,8 +70,8 @@ urlpatterns = [
     #View Carpenter Request
     path('carpenter_requests/<int:order_id>/view/',carpenter_request_view, name='accept_carpenter_request'),
     
-#     path('carpenter_requests/<int:order_id>/<int:carpenter_id>/respond/',
-#          carpenter_request_respond, name='accept_carpenter_request'),
+    path('carpenter_requests/<int:order_id>/<int:carpenter_id>/respond/',
+         carpenter_request_respond, name='accept_carpenter_request'),
 #     path('carpenter_requests/<int:order_id>/<int:carpenter_id>/<int:carpenter_request_id>/<int:material_id>/create/',
 #          carpenter_request_material_creation, name='accept_carpenter_request'),
     # path('carpenter_request/<int:order_id>/delete/', carpenter_requests_delete, name='carpenter_requests_delete'),
