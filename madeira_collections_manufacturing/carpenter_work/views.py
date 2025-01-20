@@ -40,13 +40,22 @@ def list_carpenter_requests(request, carpenter_id):
 def carpenter_request_accept(request, order_id):
     try:
         carpenter_enquiries = CarpenterEnquire.objects.filter(order_id=order_id)
+        
+        # Update the status of each carpenter enquiry
         for enquiry in carpenter_enquiries:
             enquiry.status = 'checking'
-        order = Order.objects.filter(id = order_id).first()
-        order.enquiry_status = 'checking'
-        order.save()
+            enquiry.save()  # Save the updated enquiry to the database
+
+        # Also update the order's enquiry_status
+        order = Order.objects.filter(id=order_id).first()
+        if order:
+            order.enquiry_status = 'checking'
+            order.save()
+
+        # Now you can serialize the updated carpenter enquiries and return the response
         serializer = CarpenterEnquireSerializer(carpenter_enquiries, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=404)
 

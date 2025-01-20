@@ -66,15 +66,15 @@ def retrieve_order(request, pk):
         if not order:
             return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
         order_serializer = OrderSerializer(order)
-        carpenter_enquiry = CarpenterEnquire.objects.filter(order_id=order.id)
-        main_manager = CustomUser.objects.filter(id=order.main_manager_id.id)
+        carpenter_enquiry = CarpenterEnquire.objects.filter(order_id=order.id).all()
+        main_manager = CustomUser.objects.filter(id=order.main_manager_id.id).first()
         manager_serialized = UserSerializer(main_manager)
-        carpenter = CustomUser.objects.filter(id=order.carpenter_id.id)
+        carpenter = CustomUser.objects.filter(id=order.carpenter_id.id).first()
         carpenter_serialized = UserSerializer(carpenter)
-        
         material_list = []
-        for material in order.material_ids.all():
-            material_data = Material.objects.get(id = material.id)
+        material_ids = order_serializer.data['material_ids']
+        for material_id in material_ids:
+            material_data = Material.objects.get(id = material_id)
             serialized_material =  MaterialSerializer(material_data)
             material_list.append(serialized_material.data)
 
@@ -148,8 +148,6 @@ def update_order(request, pk):
     except Order.DoesNotExist:
         return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
     try:
-        # if order.status != 'enquiry' or order.enquiry_status != 'Initiated':
-        #     return Response({'error': 'Order is confirmed can\'t modify it'}, status=status.HTTP_400_BAD_REQUEST)
         serializer = OrderSerializer(order, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -174,8 +172,6 @@ def update_order(request, pk):
 def delete_order(request, pk):
     try:
         order = Order.objects.filter(pk=pk).first()
-        # if order.status != 'enquiry' or order.enquiry_status != 'Initiated':
-        #     return Response({'error': 'Order is confirmed can\'t delete it'}, status=status.HTTP_400_BAD_REQUEST)
         order.delete()
         return Response({'message': 'Order deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
     except Exception as e:

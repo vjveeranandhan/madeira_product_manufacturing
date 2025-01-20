@@ -49,9 +49,9 @@ urlpatterns = [
      #------------ ADMIN API's------------------------------------
      path('orders/create/', create_order, name='create_order'),
      path('orders/<int:pk>/update/', update_order, name='update_order'),
-     path('orders/carpenter-request/<int:order_id>/', create_carpenter_request, name='create_carpenter_request'),
      path('orders/<int:pk>/delete/', delete_order, name='delete_order'),
      path('orders/status/<str:order_status>/', list_orders, name='list_orders'),
+     path('orders/carpenter_request/<int:order_id>/', create_carpenter_request, name='create_carpenter_request'),
 
      #--------------Common API's----------------------------------
      path('orders/<int:pk>/', retrieve_order, name='retrieve_order'),
@@ -65,10 +65,11 @@ urlpatterns = [
 
     #List Carpenter Request
     path('carpenter_requests/<int:carpenter_id>/', list_carpenter_requests, name='get_carpenter_requests'),
-    #Accept Carpenter Request
-    path('carpenter_requests/<int:order_id>/accept/',carpenter_request_accept, name='accept_carpenter_request'),
     #View Carpenter Request
     path('carpenter_requests/<int:order_id>/view/',carpenter_request_view, name='accept_carpenter_request'),
+    #Accept Carpenter Request
+    path('carpenter_requests/<int:order_id>/accept/',carpenter_request_accept, name='accept_carpenter_request'),
+    
     
     path('carpenter_requests/<int:order_id>/<int:carpenter_id>/respond/',
          carpenter_request_respond, name='accept_carpenter_request'),
