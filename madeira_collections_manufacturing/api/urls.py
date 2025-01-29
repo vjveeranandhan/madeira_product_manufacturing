@@ -2,17 +2,17 @@ from django.urls import path
 from user_manager.views import create_user, delete_user, login_view, get_all_users, get_user_by_id, update_user_by_id
 from inventory.views import get_all_categories, create_category, get_category, update_category, delete_category
 from inventory.views import get_all_materials, create_material, get_material, update_material, delete_material
-from process.views import get_all_processes, create_process, update_process, delete_process, get_process
+from process.views import get_all_processes, create_process, update_process, delete_process, get_process, dummy
 from order.views import (
     list_orders, create_order, retrieve_order, update_order, delete_order, 
-    list_manager_orders, create_carpenter_request, get_order_creation_data
+    list_manager_orders, create_carpenter_request, get_order_creation_data, add_order_to_process, verification_process_list
+    ,verification_process_view, verification_process_view_accept
 )
 from django.conf import settings
 from django.conf.urls.static import static
-from carpenter_work.views import list_carpenter_requests, carpenter_request_accept, carpenter_request_view, carpenter_request_respond
-# carpenter_request_respond, carpenter_request_material_creation
-from process.views import create_process_details, list_process_details, get_process_details, accept_process_details, delete_process_details
-from process.views import create_process_material, retrieve_process_material, update_process_material, delete_process_material
+from carpenter_work.views import list_carpenter_requests, carpenter_request_accept, carpenter_request_view, carpenter_request_respond, carpenter_request_respond, carpenter_request_update
+from process.views import list_process_details, get_process_details, accept_process_details, delete_process_details, add_to_process_verification
+from process.views import create_process_material, retrieve_process_material, delete_process_material
 
 # , retrieve_process_details,
 urlpatterns = [
@@ -47,52 +47,64 @@ urlpatterns = [
 
     #order api's
      #------------ ADMIN API's------------------------------------
-     path('orders/create/', create_order, name='create_order'),
-     path('orders/<int:pk>/update/', update_order, name='update_order'),
-     path('orders/<int:pk>/delete/', delete_order, name='delete_order'),
-     path('orders/status/<str:order_status>/', list_orders, name='list_orders'),
-     path('orders/carpenter_request/<int:order_id>/', create_carpenter_request, name='create_carpenter_request'),
+    path('orders/create/', create_order, name='create_order'),
+    path('orders/<int:pk>/update/', update_order, name='update_order'),
+    path('orders/<int:pk>/delete/', delete_order, name='delete_order'),
+    path('orders/status/<str:order_status>/', list_orders, name='list_orders'),
+    path('orders/carpenter_request/<int:order_id>/', create_carpenter_request, name='create_carpenter_request'),
+    path('orders/<int:order_id>/', retrieve_order, name='retrieve_order'),
 
-     #--------------Common API's----------------------------------
-     path('orders/<int:pk>/', retrieve_order, name='retrieve_order'),
+    #--------------Common API's----------------------------------
+    #  path('orders/<int:pk>/', retrieve_order, name='retrieve_order'),
 
-     #--------------Manager API's---------------------------------
+    #--------------Manager API's---------------------------------
+    #List Main manager orders by status
+    path('orders/manager/<int:manager_id>/<str:order_status>/', list_manager_orders, name='list_manager_orders'),
+    #View Main manager order
+    path('orders/manager/<int:order_id>/', retrieve_order, name='retrieve_order'),
+    #Add order to process
+    path('orders/manager/add_to_process/', add_order_to_process, name='add_order_to_process'),
+    #Process completion verification list
+    path('orders/manager/<int:manager_id>/verification/list/', verification_process_list, name='verification_process_list'),
+    #Process completion verification view
+    path('orders/manager/<int:order_id>/verification/view/', verification_process_view, name='verification_process_view'), 
+    #Process verification Success
+    path('orders/manager/<int:process_details_id>/verification/accept/', verification_process_view_accept, name='verification_process_view_accept'),    
 
-     path('orders/manager/<int:manager_id>/<str:order_status>/', list_manager_orders, name='list_manager_orders'),
-    #   path('orders/manager/<int:pk>/', retrieve_order, name='retrieve_order'),
-     
-     #--------------Carpenter API's---------------------------------
+    #--------------Carpenter API's-------------------------------
 
     #List Carpenter Request
-    path('carpenter_requests/<int:carpenter_id>/', list_carpenter_requests, name='get_carpenter_requests'),
+    path('carpenter_requests/<int:carpenter_id>/', list_carpenter_requests, name='list_carpenter_requests'),
     #View Carpenter Request
-    path('carpenter_requests/<int:order_id>/view/',carpenter_request_view, name='accept_carpenter_request'),
+    path('carpenter_requests/<int:order_id>/view/', carpenter_request_view, name='carpenter_request_view'),
     #Accept Carpenter Request
-    path('carpenter_requests/<int:order_id>/accept/',carpenter_request_accept, name='accept_carpenter_request'),
-    
-    
-    path('carpenter_requests/<int:order_id>/<int:carpenter_id>/respond/',
-         carpenter_request_respond, name='accept_carpenter_request'),
-#     path('carpenter_requests/<int:order_id>/<int:carpenter_id>/<int:carpenter_request_id>/<int:material_id>/create/',
-#          carpenter_request_material_creation, name='accept_carpenter_request'),
-    # path('carpenter_request/<int:order_id>/delete/', carpenter_requests_delete, name='carpenter_requests_delete'),
+    path('carpenter_requests/<int:order_id>/accept/', carpenter_request_accept, name='carpenter_request_accept'),
+    #Update Requested materials
+    path('carpenter_requests/update/', carpenter_request_update, name='carpenter_request_update'),
+    #Update Requested response
+    path('carpenter_requests/<int:order_id>/respond/', carpenter_request_respond, name='carpenter_request_respond'),
+
+    #--------------Process manager API's--------------------------
+    path('process_details/<int:order_id>/dummy/', dummy, name='accept-process-details'),
 
 
-#     # path('process-details/', list_process_details, name='process-details-list'),
-#     path('process-details/create/', create_process_details, name='process-details-create'),
-#     # path('process-details/<int:process_details_id>/', retrieve_process_details, name='process-details-retrieve'),
-#     path('process-details/<int:process_manager_id>/<int:process_id>/', list_process_details, name='list-process-details-retrieve'),
-#     path('process-details/<int:process_manager_id>/<int:process_id>/<int:order_id>/', get_process_details, name='get-process-details'),
-#     path('process-details/<int:process_manager_id>/<int:process_id>/<int:order_id>/accept/', accept_process_details, name='accept-process-details'),
-#     path('process-details/<int:id>/delete/', delete_process_details, name='delete_process_details'),
-#     # path('process-details/<int:pk>/update/', update_process_details, name='process-details-update'),
-#     # path('process-details/<int:pk>/delete/', delete_process_details, name='process-details-delete'),
+    #List Process manager Request
+    path('process_details/<int:process_manager_id>/list/', list_process_details, name='process-details-list'),
+    #View Process Details Request
+    path('process_details/<int:order_id>/view/', get_process_details, name='get-process-details'),
+    #Accept Process Details Request
+    path('process_details/<int:order_id>/accept/', accept_process_details, name='accept-process-details'),
+    #Delete Process manager Request
+    path('process_details/<int:process_details_id>/delete/', delete_process_details, name='process-details-delete'),
+    #Add to process details verifications
+    path('process_details/add_to_process_verification/<int:process_details_id>/', add_to_process_verification, name='add-to-process-verification'),
+    #Add materials used in process
+    path('process_materials/create/', create_process_material, name='create_process_material'),
+    #Delete material used in process
+    path('process_materials/<int:process_material_id>/delete/', delete_process_material, name='delete_process_material'),
 
-#     path('process-materials/create/', create_process_material, name='create_process_material'),
-#     path('process-materials/<int:process_material_id>/', retrieve_process_material, name='retrieve_process_material'),
-#     path('process-materials/update/<int:process_material_id>/', update_process_material, name='update_process_material'),
-#     path('process-materials/delete/<int:process_material_id>/', delete_process_material, name='delete_process_material'),
-
+    #Fetch data for order creation
     path('orders/creation-data/', get_order_creation_data, name='get_order_creation_data'),
+
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

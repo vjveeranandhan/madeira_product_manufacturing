@@ -15,6 +15,7 @@ class ProcessDetails(models.Model):
         ('requested', 'Requested'),
         ('in_progress', 'In Progress'),
         ('completed', 'Completed'),
+        ('verification', 'Verification'),
         ('overdue', 'Overdue'),
     ]
     
@@ -56,6 +57,11 @@ class ProcessDetails(models.Model):
     expected_completion_date = models.DateField(
         help_text="Expected date of process completion"
     )
+    completion_date = models.DateField(
+        help_text="Completion date",
+        blank=True,
+        null=True,
+    )
     workers_salary = models.FloatField(
         help_text="Workers Salary",
         default=0
@@ -75,8 +81,21 @@ class ProcessDetails(models.Model):
         help_text="Image related to the process"
     )
     over_due = models.BooleanField(default=0)
+
+    request_accepted_date = models.DateField(
+        blank=True,
+        null=True,
+    )
+
     def __str__(self):
         return f"Process Details for Order {self.order_id.id} - Process {self.process_id.id}"
+    
+class ProcessDetailsImage(models.Model):
+    process_details_id = models.ForeignKey(ProcessDetails, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='process_details_images/')
+
+    def __str__(self):
+        return f"Image for {self.order.product_name}"
     
 class ProcessMaterials(models.Model):
     process_details_id = models.ForeignKey(

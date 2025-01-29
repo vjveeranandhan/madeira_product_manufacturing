@@ -23,7 +23,17 @@ class Order(models.Model):
         ('over_due', 'Over due'),
         ('completed', 'Completed'),
         ('archived', 'Archived'),
-    ] 
+    ]
+
+    PROCESS_STATUS = [
+        ('initiated', 'Initiated'),
+        ('requested', 'Requested'),
+        ('on_going', 'On going'),
+        ('verification', 'Verification'),
+        ('completed', 'Completed'),
+        ('over_due', 'Over due'),
+    ]
+
     priority = models.CharField(
         max_length=10,
         choices=PRIORITY_CHOICES,
@@ -61,6 +71,7 @@ class Order(models.Model):
     # carpenter_work_completion_date = models.DateField(blank=True, null=True)
     completed_processes = models.ManyToManyField(Process, blank=True, related_name='process')
     enquiry_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='initiated', help_text="Status of the enquiry")
+    current_process_status = models.CharField(max_length=20, choices=PROCESS_STATUS, default='initiated', help_text="Status of current process")
 
     # material_length = models.FloatField(help_text="Length in feet", blank=True, null=True)
     # material_height = models.FloatField(help_text="Height in feel", blank=True, null=True)

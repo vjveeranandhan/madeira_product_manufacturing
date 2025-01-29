@@ -16,12 +16,9 @@ from order.OrderSerializer import OrderSerializer
 @permission_classes([IsAuthenticated])
 def list_carpenter_requests(request, carpenter_id):
     try:
-        unique_order_ids = CarpenterEnquire.objects.filter(
-            carpenter_id=carpenter_id).values_list('order_id', flat=True).distinct()
-        print(unique_order_ids)
+        orders = Order.objects.filter(carpenter_id = carpenter_id).exclude(enquiry_status='initiated').all()
         orders_data = []
-        for order_id in unique_order_ids:
-            order = Order.objects.filter(id = order_id).first()
+        for order in orders:
             order_data = {
                 'order_id': order.id,
                 'product_name': order.product_name,
@@ -35,7 +32,7 @@ def list_carpenter_requests(request, carpenter_id):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=404)
     
-@api_view(['POST'])
+@api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def carpenter_request_accept(request, order_id):
     try:
@@ -71,6 +68,9 @@ def carpenter_request_view(request, order_id):
             material_obj = Material.objects.filter(id= material).first()
             material_serializer = MaterialSerializer(material_obj)
             materials = material_serializer.data
+            enquiry_obj = CarpenterEnquire.objects.filter(order_id= order_id, material_id=material).first()
+            enquiry_serializer = CarpenterEnquireSerializer(enquiry_obj)
+            materials['enquiry_data'] = enquiry_serializer.data
             materials.pop('price', None)
             materials.pop('quantity', None)
             materials.pop('category', None)
@@ -96,47 +96,48 @@ def carpenter_request_view(request, order_id):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=404)
 
-@api_view(['POST'])
+@api_view(['PUT'])
 @permission_classes([IsAuthenticated])
-def carpenter_request_respond(request, order_id, carpenter_id):
+def carpenter_request_respond(request, order_id):
     try:
-        carpenter_enquiries = CarpenterEnquire.objects.filter(order_id=order_id, carpenter_id = carpenter_id)
+        carpenter_enquiries = CarpenterEnquire.objects.filter(order_id=order_id).all()
         for enquiry in carpenter_enquiries:
             if (
-                enquiry.material_height is None or 
-                enquiry.material_length is None or 
+                enquiry.material_height is None or
+                enquiry.material_length is None or
                 enquiry.material_width is None
             ):
                 e = 'Missing material details'
                 return JsonResponse({'error': str(e)}, status=404)
-
-        for enquiry in carpenter_enquiries:
             enquiry.status = 'completed'
-        order = Order.objects.get(id = order_id)
-        order.enquiry_status = 'completed' 
+            enquiry.save()
+        order = Order.objects.filter(id = order_id).first()
+        order.enquiry_status = 'completed'
+        order.save()
         serializer = CarpenterEnquireSerializer(carpenter_enquiries, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=404)
 
-# @api_view(['PUT'])
-# @permission_classes([IsAuthenticated])
-# def carpenter_request_material_creation(request, order_id, carpenter_id, carpenter_request_id, material_id):
-#     try:
-#         carpenter_enquiry = CarpenterEnquire.objects.filter(
-#             id=carpenter_request_id,
-#             order_id=order_id,
-#             carpenter_id=carpenter_id,
-#             material_id=material_id,
-#             status = 'checking'
-#         ).first()
-#         if not carpenter_enquiry:
-#             return JsonResponse({'error': 'Carpenter Enquiry not found'}, status=404)
-#         serializer = CarpenterEnquireSerializer(carpenter_enquiry, data=request.data, partial=True)
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response(serializer.data, status=status.HTTP_200_OK)
-#         else:
-#             return JsonResponse({'error': serializer.errors}, status=400)
-#     except Exception as e:
-#         return JsonResponse({'error': str(e)}, status=500)
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def carpenter_request_update(request):
+    try:
+        data = request.data
+        for request_item in data['data']:
+            order_id = request_item['order_id']
+            carpenter_enquiry = CarpenterEnquire.objects.filter(
+                order_id=request_item['order_id'],
+                material_id=request_item['material_id'],
+            ).first()
+            if not carpenter_enquiry:
+                return JsonResponse({'error': 'Carpenter Enquiry not found'}, status=404)
+            carpenter_enquiry.material_length = request_item['material_length']
+            carpenter_enquiry.material_height = request_item['material_height']
+            carpenter_enquiry.material_width = request_item['material_width']
+            carpenter_enquiry.save()
+        carpenter_enquiry_obj = CarpenterEnquire.objects.filter(order_id=order_id).all()
+        serializer = CarpenterEnquireSerializer(carpenter_enquiry_obj, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
