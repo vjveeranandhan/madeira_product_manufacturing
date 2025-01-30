@@ -134,3 +134,22 @@ def update_user_by_id(request, user_id):
         return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def logout_view(request):
+    try:
+        refresh_token = request.data.get('refresh')
+        
+        if not refresh_token:
+            return Response({'error': 'Refresh token is required to logout.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Try to blacklist the refresh token
+        token = RefreshToken(refresh_token)
+        token.blacklist()
+
+        return Response({'message': 'Successfully logged out.'}, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({'error': 'Invalid token.'}, status=status.HTTP_400_BAD_REQUEST)

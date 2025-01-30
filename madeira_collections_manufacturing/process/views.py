@@ -268,21 +268,6 @@ def get_process_details(request, order_id):
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
-@api_view(['PUT'])
-@permission_classes([IsAuthenticated])
-def dummy(request, order_id):
-    order = Order.objects.filter(id=order_id).first()
-    process = Process.objects.filter(id=2).first()
-    order.current_process = process
-    order.current_process_status = 'requested'
-    order.save()
-
-    pd = ProcessDetails.objects.filter(id=6).first()
-    pd.process_status = 'completed'
-    pd.save()
-    return Response({'Msg': 'Success'}, status=status.HTTP_201_CREATED)
-
 # API for PROCESS MANAGER to Accept their process_details in a particular process and order
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])

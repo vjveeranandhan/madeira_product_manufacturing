@@ -53,7 +53,7 @@ def create_order(request):
 @permission_classes([IsAuthenticated])
 def list_orders(request, order_status):
     try:
-        orders = Order.objects.filter(status= order_status)
+        orders = Order.objects.filter(status= order_status).all()
         serializer = OrderSerializer(orders, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     except Exception as e:

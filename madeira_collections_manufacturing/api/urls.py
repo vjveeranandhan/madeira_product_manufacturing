@@ -1,8 +1,8 @@
 from django.urls import path
-from user_manager.views import create_user, delete_user, login_view, get_all_users, get_user_by_id, update_user_by_id
+from user_manager.views import create_user, delete_user, login_view, get_all_users, get_user_by_id, update_user_by_id, logout_view
 from inventory.views import get_all_categories, create_category, get_category, update_category, delete_category
 from inventory.views import get_all_materials, create_material, get_material, update_material, delete_material
-from process.views import get_all_processes, create_process, update_process, delete_process, get_process, dummy
+from process.views import get_all_processes, create_process, update_process, delete_process, get_process
 from order.views import (
     list_orders, create_order, retrieve_order, update_order, delete_order, 
     list_manager_orders, create_carpenter_request, get_order_creation_data, add_order_to_process, verification_process_list
@@ -18,6 +18,7 @@ from process.views import create_process_material, retrieve_process_material, de
 urlpatterns = [
      #user and Login api's
      path('users/login/', login_view, name='login'),
+     path('users/login/', logout_view, name='logout'),
      path('create-user/', create_user, name='create_user'),
      path('users/delete/<int:user_id>/', delete_user, name='delete_user'),
      path('users/', get_all_users, name='get_all_user'),
@@ -54,9 +55,6 @@ urlpatterns = [
     path('orders/carpenter_request/<int:order_id>/', create_carpenter_request, name='create_carpenter_request'),
     path('orders/<int:order_id>/', retrieve_order, name='retrieve_order'),
 
-    #--------------Common API's----------------------------------
-    #  path('orders/<int:pk>/', retrieve_order, name='retrieve_order'),
-
     #--------------Manager API's---------------------------------
     #List Main manager orders by status
     path('orders/manager/<int:manager_id>/<str:order_status>/', list_manager_orders, name='list_manager_orders'),
@@ -85,8 +83,6 @@ urlpatterns = [
     path('carpenter_requests/<int:order_id>/respond/', carpenter_request_respond, name='carpenter_request_respond'),
 
     #--------------Process manager API's--------------------------
-    path('process_details/<int:order_id>/dummy/', dummy, name='accept-process-details'),
-
 
     #List Process manager Request
     path('process_details/<int:process_manager_id>/list/', list_process_details, name='process-details-list'),
