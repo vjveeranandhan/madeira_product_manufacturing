@@ -6,7 +6,7 @@ from process.views import get_all_processes, create_process, update_process, del
 from order.views import (
     list_orders, create_order, retrieve_order, update_order, delete_order, 
     list_manager_orders, create_carpenter_request, get_order_creation_data, add_order_to_process, verification_process_list
-    ,verification_process_view, verification_process_view_accept
+    ,verification_process_view, verification_process_view_accept, complete_order
 )
 from django.conf import settings
 from django.conf.urls.static import static
@@ -54,6 +54,7 @@ urlpatterns = [
     path('orders/status/<str:order_status>/', list_orders, name='list_orders'),
     path('orders/carpenter_request/<int:order_id>/', create_carpenter_request, name='create_carpenter_request'),
     path('orders/<int:order_id>/', retrieve_order, name='retrieve_order'),
+    path('orders/<int:order_id>/', complete_order, name='complete_order'),
 
     #--------------Manager API's---------------------------------
     #List Main manager orders by status

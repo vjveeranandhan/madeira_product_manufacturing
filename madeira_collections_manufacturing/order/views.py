@@ -156,12 +156,15 @@ def retrieve_order(request, order_id):
                 process_manager_serialized = CustomUserSerializer(process_manager_obj)
                 workers_list.append(process_manager_serialized.data)
                 current_process_dict['current_process_workers'] = workers_list
+        number_of_processes = Process.objects.count()
+        completed_process = order.completed_processes.count()
         return Response({   'order_data': order_serializer.data,
                             'main_manager': manager_serialized.data,
                             'materials': material_list,
                             'carpenter_enquiry_data': carpenter_data,
                             'completed_process_data': completed_process_list,
-                            'current_process': current_process_dict
+                            'current_process': current_process_dict,
+                            'completion_percentage': (completed_process/number_of_processes)*100
                         },
                         status=status.HTTP_200_OK)
     except Exception as e:
@@ -487,3 +490,21 @@ def verification_process_view_accept(request, process_details_id):
             {'error': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+    
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def complete_order(request, order_id):
+    try:
+        order = Order.objects.filter(id=order_id).first()
+        if order.current_process_status != 'completed':
+            return Response({'error': 'Current process is not completed!'}, status=status.HTTP_400_BAD_REQUEST)
+    except Order.DoesNotExist:
+        return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
+    try:
+        serializer = OrderSerializer(order, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=404)
