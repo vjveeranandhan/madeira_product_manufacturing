@@ -34,6 +34,7 @@ class Material(models.Model):
     price = models.FloatField(default=0.0)
     category = models.ForeignKey('InventoryCategory', on_delete=models.PROTECT, related_name='materials')
     reference_image = models.ImageField(upload_to='material_images/', blank=True, null=True)
+    mrp_in_gst = models.FloatField(default=0.0)
 
     def __str__(self):
         return self.name

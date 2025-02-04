@@ -45,6 +45,7 @@ class Order(models.Model):
         choices=ORDER_STATUS,
         default='enquiry'
     )
+    product = models.ForeignKey(Material, on_delete=models.PROTECT, related_name='product', blank=True, null=True)
     current_process = models.ForeignKey(Process, on_delete=models.PROTECT, related_name='order_stage', blank=True, null=True)
     product_name = models.CharField(max_length=100)
     product_name_mal = models.TextField(max_length=100, blank=True, null=True)
@@ -93,7 +94,7 @@ class OrderImage(models.Model):
         return f"Image for {self.order.product_name}"
     
 class Review(models.Model):
-    order_id = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='review')
+    order_id = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='order')
     review = models.TextField()
     rating = models.IntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(5)]

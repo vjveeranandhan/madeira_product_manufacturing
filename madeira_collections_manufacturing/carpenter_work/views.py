@@ -76,7 +76,12 @@ def carpenter_request_view(request, order_id):
             materials.pop('category', None)
             materials.pop('stock_availability', None)
             material_data.append(materials)
+        #Product Data
+        product_data = {}
+        if order.product:
+            product_data = MaterialSerializer(order.product).data
         order_data = {
+            'product': product_data,
             'order_id': order.id,
             'priority': order.priority,
             'images': order_serializer.data['images'],

@@ -156,9 +156,15 @@ def retrieve_order(request, order_id):
                 process_manager_serialized = CustomUserSerializer(process_manager_obj)
                 workers_list.append(process_manager_serialized.data)
                 current_process_dict['current_process_workers'] = workers_list
+        #Order completion percentage calculation
         number_of_processes = Process.objects.count()
         completed_process = order.completed_processes.count()
-        return Response({   'order_data': order_serializer.data,
+        #Product Data
+        product_data = {}
+        if order.product:
+            product_data = MaterialSerializer(order.product).data
+        return Response({   'product': product_data,
+                            'order_data': order_serializer.data,
                             'main_manager': manager_serialized.data,
                             'materials': material_list,
                             'carpenter_enquiry_data': carpenter_data,
@@ -411,7 +417,12 @@ def verification_process_view(request, order_id):
             material_data=material
             material_data['material']=material_serializer.data
             material_list.append(material_data)
+        #Product Data
+        product_data = {}
+        if orders.product:
+            product_data = MaterialSerializer(order.product).data
         return Response({'data':{
+            'product': product_data,
             'order_data': order,
             'process': process_serializer.data,
             'process_details': process_details_serializer.data,

@@ -18,6 +18,7 @@ from datetime import date, datetime
 from .process_details_serializer import ProcessMaterialsSerializer
 from django.shortcuts import get_object_or_404
 from inventory.models import Material
+from inventory.MaterialSerializer import MaterialSerializer
 
 # GET all processes
 @api_view(['GET'])
@@ -266,7 +267,12 @@ def get_process_details(request, order_id):
                 worker_serializer_data.pop(field, None)
             process_workers.append(worker_serializer_data)
         detail_data['workers_data'] = process_workers
-        
+
+         #Product Data
+        product_data = {}
+        if order.product:
+            product_data = MaterialSerializer(order.product).data
+        detail_data['product'] = product_data
         return Response({'data': detail_data}, status=status.HTTP_200_OK)
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
