@@ -6,8 +6,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import InventoryCategory
 from .InventoryCategorySerializer import InventoryCategorySerializer
-from .MaterialSerializer import MaterialSerializer
-from .models import Material
+from .MaterialSerializer import MaterialSerializer, CreateMaterialSerializer
+from .models import Material, MaterialImages
 
 #__________ Inventory Category api's ________________
 
@@ -87,9 +87,17 @@ def get_all_materials(request):
 @permission_classes([IsAuthenticated])
 def create_material(request):
     try:
-        serializer = MaterialSerializer(data=request.data)
+        _data = request.data.copy()
+        material_images = request.FILES.getlist('material_image')
+        _data.pop('image', None)
+        serializer = CreateMaterialSerializer(data=_data)
         if serializer.is_valid():
-            serializer.save()
+            material_obj = serializer.save()
+            for image in material_images:
+                MaterialImages.objects.create(
+                    image=image,
+                    material_id=material_obj
+                )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     except:

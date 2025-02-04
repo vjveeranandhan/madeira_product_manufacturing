@@ -14,6 +14,7 @@ class OrderSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class OrderCreateSerializer(serializers.ModelSerializer):
+    # material_ids = serializers.ListField(child=serializers.IntegerField())
     class Meta:
         model = Order
         fields = '__all__'

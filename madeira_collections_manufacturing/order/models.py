@@ -2,6 +2,7 @@ from django.db import models
 from user_manager.models import CustomUser
 from inventory.models import Material
 from process.models import Process
+from django.core.validators import MinValueValidator, MaxValueValidator
 # Use CustomUser model for foreign key relationships
 
 class Order(models.Model):
@@ -72,7 +73,7 @@ class Order(models.Model):
     completed_processes = models.ManyToManyField(Process, blank=True, related_name='process')
     enquiry_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='initiated', help_text="Status of the enquiry")
     current_process_status = models.CharField(max_length=20, choices=PROCESS_STATUS, default='initiated', help_text="Status of current process")
-
+    
     # material_length = models.FloatField(help_text="Length in feet", blank=True, null=True)
     # material_height = models.FloatField(help_text="Height in feel", blank=True, null=True)
     # material_width = models.FloatField(help_text="Width in feet",  blank=True, null=True)
@@ -90,3 +91,10 @@ class OrderImage(models.Model):
 
     def __str__(self):
         return f"Image for {self.order.product_name}"
+    
+class Review(models.Model):
+    order_id = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='review')
+    review = models.TextField()
+    rating = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)]
+    )

@@ -148,15 +148,18 @@ def list_process_details(request, process_manager_id):
         ]           
         list_data = []
         for detail in process_details:
-            # detail_data = {}
+            detail_data = {}
             # Get and serialize the related Order
             order = detail.order_id
             order_serializer = OrderSerializer(order)
+            current_process = order.current_process
+            process_serializer = ProcessSerializer(current_process)
             order_data = order_serializer.data
             for field in fields_to_remove:
                 order_data.pop(field, None)
-            # detail_data['order_data'] = order_data
-            list_data.append(order_data)
+            detail_data['order_data'] = order_data
+            detail_data['process']= process_serializer.data
+            list_data.append(detail_data)
         
         return Response({'data': list_data}, status=status.HTTP_200_OK)
     except Exception as e:
@@ -204,7 +207,7 @@ def get_process_details(request, order_id):
         for field in order_fields_to_remove:
             order_data.pop(field, None)
         detail_data['order_data'] = order_data
-
+        detail_data['process'] = ProcessSerializer(order.current_process).data
 
         main_manager_fields_to_remove=[
             'salary_per_hr',
@@ -380,7 +383,7 @@ def delete_process_material(request, process_material_id):
 @permission_classes([IsAuthenticated])
 def add_to_process_verification(request, process_details_id):
     try:
-        reference_images = request.FILES.getlist('image') 
+        reference_images = request.FILES.getlist('image')
         process_details = ProcessDetails.objects.filter(id=process_details_id).first()
         process_details.process_status = 'verification'
         order = Order.objects.filter(id=process_details.order_id.id).first()

@@ -17,8 +17,9 @@ class Material(models.Model):
         ('low_stock', 'Low Stock'),
         ('out_of_stock', 'Out of Stock'),
     ]
-    name = models.CharField(max_length=100, unique=True)
-    name_mal = models.CharField(max_length=100, unique=True)
+    code = models.CharField(max_length=100, blank=True, null=True)
+    name = models.CharField(max_length=100)
+    name_mal = models.CharField(max_length=100)
     description = models.TextField(blank=True, null=True)
     description_mal = models.TextField(blank=True, null=True)
     colour = models.TextField(blank=True, null=True)
@@ -32,6 +33,11 @@ class Material(models.Model):
     )
     price = models.FloatField(default=0.0)
     category = models.ForeignKey('InventoryCategory', on_delete=models.PROTECT, related_name='materials')
+    reference_image = models.ImageField(upload_to='material_images/', blank=True, null=True)
 
     def __str__(self):
         return self.name
+
+class MaterialImages(models.Model):
+    material_id = models.ForeignKey(Material, on_delete=models.CASCADE, related_name='material_images')
+    image = models.ImageField(upload_to='material_images/')
