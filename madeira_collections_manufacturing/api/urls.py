@@ -54,7 +54,7 @@ urlpatterns = [
     path('orders/status/<str:order_status>/', list_orders, name='list_orders'),
     path('orders/carpenter_request/<int:order_id>/', create_carpenter_request, name='create_carpenter_request'),
     path('orders/<int:order_id>/', retrieve_order, name='retrieve_order'),
-    path('orders/<int:order_id>/', complete_order, name='complete_order'),
+    path('orders/<int:order_id>/completed/', complete_order, name='complete_order'),
 
     #--------------Manager API's---------------------------------
     #List Main manager orders by status
