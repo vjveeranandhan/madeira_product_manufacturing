@@ -153,12 +153,12 @@ def list_process_details(request, process_manager_id):
             # Get and serialize the related Order
             order = detail.order_id
             order_serializer = OrderSerializer(order)
-            current_process = order.current_process
-            process_serializer = ProcessSerializer(current_process)
+            process_serializer = ProcessSerializer(detail.process_id)
             order_data = order_serializer.data
             for field in fields_to_remove:
                 order_data.pop(field, None)
             detail_data['order_data'] = order_data
+            detail_data['process_details'] = ProcessDetailsSerializer(detail).data
             detail_data['process']= process_serializer.data
             list_data.append(detail_data)
         
@@ -170,14 +170,12 @@ def list_process_details(request, process_manager_id):
 # API for PROCESS MANAGER to list all their process_details in a particular process and order
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def get_process_details(request, order_id):
+def get_process_details(request, process_details_id):
     try:
-        # Filter ProcessDetails based on process_manager_id, process_id, and order_id
-        order = Order.objects.filter(id=order_id).first()
         process_details = ProcessDetails.objects.filter(
-            order_id=order_id
+            id=process_details_id
         ).first()
-        print("process_details : ", process_details)
+        order = Order.objects.filter(id=process_details.order_id.id).first()
         order_fields_to_remove = [
             "estimated_price",
             "customer_name",
@@ -197,7 +195,7 @@ def get_process_details(request, order_id):
             'current_process',
             'main_manager_id',
             'carpenter_id',
-            'material_ids',
+            # 'material_ids',
             'reference_image'
         ]           
         detail_data = {}
@@ -208,7 +206,7 @@ def get_process_details(request, order_id):
         for field in order_fields_to_remove:
             order_data.pop(field, None)
         detail_data['order_data'] = order_data
-        detail_data['process'] = ProcessSerializer(order.current_process).data
+        
 
         main_manager_fields_to_remove=[
             'salary_per_hr',
@@ -228,14 +226,15 @@ def get_process_details(request, order_id):
             'workers_salary',
             'material_price',
             'total_price',
-            'process_id',
+            # 'process_id',
             'image',
             'order_id',
             'main_manager_id',
             'process_manager_id',
             'process_workers_id',
         ]
-
+        #process
+        detail_data['process'] = ProcessSerializer(process_details.process_id).data
         # Serialize ProcessDetails
         detail_serializer = ProcessDetailsSerializer(process_details)
         pro_details_data = detail_serializer.data
@@ -273,6 +272,19 @@ def get_process_details(request, order_id):
         if order.product:
             product_data = MaterialSerializer(order.product).data
         detail_data['product'] = product_data
+
+        #process materials
+        process_material_obj = ProcessMaterials.objects.filter(process_details_id=process_details.id).all()
+        materials_used = []
+        for material in process_material_obj:
+            material_dict = {}  
+            material_obj = Material.objects.filter(id = material.material_id.id).first()
+            material_serialized = MaterialSerializer(material_obj)
+            process_material_serialized = ProcessMaterialsSerializer(material)
+            material_dict['material'] = material_serialized.data
+            material_dict['material_used'] = process_material_serialized.data
+            materials_used.append(material_dict)
+        detail_data['used_materials'] = materials_used
         return Response({'data': detail_data}, status=status.HTTP_200_OK)
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

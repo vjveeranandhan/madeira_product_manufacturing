@@ -88,7 +88,7 @@ urlpatterns = [
     #List Process manager Request
     path('process_details/<int:process_manager_id>/list/', list_process_details, name='process-details-list'),
     #View Process Details Request
-    path('process_details/<int:order_id>/view/', get_process_details, name='get-process-details'),
+    path('process_details/<int:process_details_id>/view/', get_process_details, name='get-process-details'),
     #Accept Process Details Request
     path('process_details/<int:order_id>/accept/', accept_process_details, name='accept-process-details'),
     #Delete Process manager Request
