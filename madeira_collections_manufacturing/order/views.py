@@ -35,7 +35,6 @@ def create_order(request):
         reference_images = request.FILES.getlist('reference_image') 
         data.pop('reference_image', None)
         serializer = OrderCreateSerializer(data=data)
-        print(reference_images)
         if serializer.is_valid():
             order_obj = serializer.save()
             for image in reference_images:
@@ -312,7 +311,6 @@ def get_order_creation_data(request):
     - Managers
     """
     try:
-        print("get_order_creation_data")
         # Get all active categories
         categories = InventoryCategory.objects.all()
         categories_data = InventoryCategorySerializer(categories, many=True).data
