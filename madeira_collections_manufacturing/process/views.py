@@ -330,8 +330,6 @@ def create_process_material(request):
         data['material_price'] = material.price
         data['total_price'] = material.price * data['quantity']
 
-        print(data)
-
         process_details = ProcessDetails.objects.get(id=data['process_details_id'])
         process_details_material_price = process_details.material_price
         process_details_material_price+= data['total_price']
