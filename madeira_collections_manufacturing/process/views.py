@@ -175,11 +175,11 @@ def get_process_details(request, process_details_id):
         process_details = ProcessDetails.objects.filter(
             id=process_details_id
         ).first()
-        if not process_details.exists():
+        if process_details is None:
             return Response({"error": "No process details found"}, status=status.HTTP_404_NOT_FOUND)
         order = Order.objects.filter(id=process_details.order_id.id).first()
-        if not order.exists():
-            return Response({"error": "Order not found"}, status=status.HTTP_404_NOT_FOUND)
+        if order is None:
+            return Response({"error": "Order found"}, status=status.HTTP_404_NOT_FOUND)
         order_fields_to_remove = [
             "estimated_price",
             "customer_name",

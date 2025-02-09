@@ -62,7 +62,6 @@ def list_orders(request, order_status):
 @permission_classes([IsAuthenticated])
 def retrieve_order(request, order_id):
     try:
-        print("Hello")
         order = Order.objects.filter(id=order_id).first()
         if not order:
             return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
@@ -112,7 +111,6 @@ def retrieve_order(request, order_id):
                     materials_list.append(material_dict)
                     material_dict={}
                 completed_process_dict['materials_used'] = materials_list
-                completed_process_list.append(completed_process_dict)
 
                 workers_list=[]
                 for worker in process_details_obj.process_workers_id.all():
@@ -123,6 +121,9 @@ def retrieve_order(request, order_id):
                 process_manager_serialized = CustomUserSerializer(process_manager_obj)
                 workers_list.append(process_manager_serialized.data)
                 completed_process_dict['workers_data']=workers_list
+                completed_process_list.append(completed_process_dict)
+                completed_process_dict = {}
+
 
 #----------------Current Process Data---------------------------------------------------------------------------------
         current_process_dict = {}
@@ -419,7 +420,7 @@ def verification_process_view(request, order_id):
         #Product Data
         product_data = {}
         if orders.product:
-            product_data = MaterialSerializer(order.product).data
+            product_data = MaterialSerializer(orders.product).data
         return Response({'data':{
             'product': product_data,
             'order_data': order,
