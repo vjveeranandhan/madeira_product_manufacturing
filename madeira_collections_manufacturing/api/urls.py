@@ -6,7 +6,7 @@ from process.views import get_all_processes, create_process, update_process, del
 from order.views import (
     list_orders, create_order, retrieve_order, update_order, delete_order, 
     list_manager_orders, create_carpenter_request, get_order_creation_data, add_order_to_process, verification_process_list
-    ,verification_process_view, verification_process_view_accept, complete_order
+    ,verification_process_view, verification_process_view_accept, complete_order, verification_process_view_reject
 )
 from django.conf import settings
 from django.conf.urls.static import static
@@ -47,7 +47,7 @@ urlpatterns = [
      path('processes/<int:pk>/delete/', delete_process, name='delete_process'),
 
     #order api's
-     #------------ ADMIN API's------------------------------------
+     #------------ ADMIN API's-----------------------------------
     path('orders/create/', create_order, name='create_order'),
     path('orders/<int:pk>/update/', update_order, name='update_order'),
     path('orders/<int:pk>/delete/', delete_order, name='delete_order'),
@@ -67,8 +67,10 @@ urlpatterns = [
     path('orders/manager/<int:manager_id>/verification/list/', verification_process_list, name='verification_process_list'),
     #Process completion verification view
     path('orders/manager/<int:order_id>/verification/view/', verification_process_view, name='verification_process_view'), 
-    #Process verification Success
+    #Process verification Accept
     path('orders/manager/<int:process_details_id>/verification/accept/', verification_process_view_accept, name='verification_process_view_accept'),    
+   #Process verification Reject
+    path('orders/manager/<int:process_details_id>/verification/reject/', verification_process_view_reject, name='verification_process_view_reject'),    
 
     #--------------Carpenter API's-------------------------------
 

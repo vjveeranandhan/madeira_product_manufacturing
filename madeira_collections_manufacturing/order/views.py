@@ -62,6 +62,7 @@ def list_orders(request, order_status):
 @permission_classes([IsAuthenticated])
 def retrieve_order(request, order_id):
     try:
+        print("Hello")
         order = Order.objects.filter(id=order_id).first()
         if not order:
             return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
@@ -433,7 +434,6 @@ def verification_process_view(request, order_id):
         )
 
 # Accept the completion request of a process
-
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def verification_process_view_accept(request, process_details_id):
@@ -478,14 +478,15 @@ def verification_process_view_accept(request, process_details_id):
         process_manager_data = process_manager_serializer.data
         work_expense += process_manager_data['salary_per_hr'] * total_working_hrs
 
+        process_details_total_price = 0
         process_details_obj.workers_salary = work_expense
-        # process_details_obj.total_price += work_expense
+        process_details_total_price = process_details_obj.total_price
+        process_details_obj.total_price = work_expense + process_details_total_price
         process_details_obj.process_status = 'completed'
         process_details_obj.completion_date = completion_date
         process_details_obj.save()
 
         order_obj = Order.objects.filter(id=process_details_obj.order_id.id).first()
-        # order_obj.ongoing_expense += work_expense
         order_obj.current_process_status = 'completed'
         on_going_expense = order_obj.ongoing_expense
         on_going_expense+=work_expense
@@ -500,6 +501,29 @@ def verification_process_view_accept(request, process_details_id):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
     
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def verification_process_view_reject(request, process_details_id):
+    try:
+        process_details_obj = ProcessDetails.objects.filter(id= process_details_id).first()
+        if not process_details_obj:
+            return Response(
+                {"message": "Process Details not found."}, 
+                status=status.HTTP_200_OK
+            )
+        if process_details_obj.process_status != 'verification':
+            return Response(
+                {"message": "Process Details not available for verification"}, 
+                status=status.HTTP_200_OK
+            )
+        process_details_obj.process_status = 'in_progress'
+        process_details_obj.save()
+        return Response({'data':{"Success"}}, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def complete_order(request, order_id):
