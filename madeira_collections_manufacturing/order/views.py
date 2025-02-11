@@ -84,7 +84,9 @@ def retrieve_order(request, order_id):
         carpenter_data_list = []
         for carpenter_enquiry_item in carpenter_enquiry:
             carpenter_enquiry_serializer = CarpenterEnquireSerializer(carpenter_enquiry_item)
-            carpenter_data_list.append(carpenter_enquiry_serializer.data)
+            carpenter_response = carpenter_enquiry_serializer.data
+            carpenter_response['material'] = MaterialSerializer(carpenter_enquiry_item.material_id).data
+            carpenter_data_list.append(carpenter_response)
         carpenter_data['carpenter_data']=carpenter_data_list
         
 #------------------Completed Process Data-----------------------------------------------------
