@@ -32,6 +32,7 @@ from user_manager.serializer import UserSerializer
 def create_order(request):
     try:
         data = request.data.copy() 
+        print(type(data))
         reference_images = request.FILES.getlist('reference_image') 
         data.pop('reference_image', None)
         serializer = OrderCreateSerializer(data=data)
@@ -110,9 +111,11 @@ def retrieve_order(request, order_id):
                     materials_obj_serializer = MaterialSerializer(materials_obj)
                     material_dict['completed_material_details']=materials_obj_serializer.data
                     material_dict['completed_material_used_in_process']=serialized_material.data
+                    print(material_dict)
                     materials_list.append(material_dict)
                     material_dict={}
                 completed_process_dict['materials_used'] = materials_list
+                materials_list = []
 
                 workers_list=[]
                 for worker in process_details_obj.process_workers_id.all():
@@ -125,7 +128,7 @@ def retrieve_order(request, order_id):
                 completed_process_dict['workers_data']=workers_list
                 completed_process_list.append(completed_process_dict)
                 completed_process_dict = {}
-
+                workers_list=[]
 
 #----------------Current Process Data---------------------------------------------------------------------------------
         current_process_dict = {}
