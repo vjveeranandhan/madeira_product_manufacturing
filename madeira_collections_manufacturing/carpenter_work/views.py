@@ -16,7 +16,7 @@ from order.OrderSerializer import OrderSerializer
 @permission_classes([IsAuthenticated])
 def list_carpenter_requests(request, carpenter_id):
     try:
-        orders = Order.objects.filter(carpenter_id = carpenter_id).exclude(enquiry_status='initiated').all()
+        orders = Order.objects.filter(carpenter_id = carpenter_id).all()
         orders_data = []
         for order in orders:
             order_data = {
@@ -83,6 +83,7 @@ def carpenter_request_view(request, order_id):
         order_data = {
             'product': product_data,
             'order_id': order.id,
+            'audios': order_serializer.data['audios'],
             'priority': order.priority,
             'images': order_serializer.data['images'],
             'product_name': order.product_name,

@@ -87,29 +87,19 @@ WSGI_APPLICATION = 'madeira_collections_manufacturing.wsgi.application'
 
 
 # Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'madeira',      # Replace with your database name
-#         'USER': 'veeran',          # Replace with your database username
-#         'PASSWORD': 'veeran',  # Replace with your database password
-#         'HOST': '127.0.0.1',       # Replace with your database host (e.g., 'localhost')
-#         'PORT': '5432',            # Default PostgreSQL port
-#     }
-# }
+from decouple import config
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',  # SQLite engine
-        'NAME': BASE_DIR / 'db.sqlite3',  # Path to the SQLite database file
+        'ENGINE': 'django.db.backends.postgresql', 
+        'NAME': config('DB_NAME'),
+        'USER': config('DB_USER'),
+        'PASSWORD': config('DB_PASSWORD'),
+        'HOST': config('DB_HOST'),
+        'PORT': int(config('DB_PORT')),  
     }
 }
-
-
-# Password validation
-# https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {

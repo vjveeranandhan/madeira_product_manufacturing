@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework import status
 from datetime import date
-from .models import Order, OrderImage
+from .models import Order, OrderImage, OrderAudio
 from .OrderSerializer import OrderSerializer, OrderImageSerializer, OrderCreateSerializer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
@@ -32,8 +32,8 @@ from user_manager.serializer import UserSerializer
 def create_order(request):
     try:
         data = request.data.copy() 
-        print(type(data))
         reference_images = request.FILES.getlist('reference_image') 
+        reference_audios = request.FILES.get('reference_audios')
         data.pop('reference_image', None)
         serializer = OrderCreateSerializer(data=data)
         if serializer.is_valid():
@@ -43,6 +43,12 @@ def create_order(request):
                     image=image,
                     order=order_obj
                 )
+            if reference_audios:
+                OrderAudio.objects.create(
+                    audio=reference_audios,
+                    order=order_obj
+                )
+
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
@@ -111,7 +117,6 @@ def retrieve_order(request, order_id):
                     materials_obj_serializer = MaterialSerializer(materials_obj)
                     material_dict['completed_material_details']=materials_obj_serializer.data
                     material_dict['completed_material_used_in_process']=serialized_material.data
-                    print(material_dict)
                     materials_list.append(material_dict)
                     material_dict={}
                 completed_process_dict['materials_used'] = materials_list
@@ -233,12 +238,13 @@ def create_carpenter_request(request, order_id):
             return JsonResponse({'error': 'Order not found'}, status=404)
         for material_id in order.material_ids.all():
             material_instance = Material.objects.filter(id=int(material_id.id)).first()
-            CarpenterEnquire.objects.create(
+            carpenter_enq = CarpenterEnquire.objects.create(
                 order_id=order,
                 material_id=material_instance,
                 carpenter_id=order.carpenter_id,
                 status='requested'
             )
+            carpenter_enq.save()
         order.enquiry_status = 'requested'
         order.save()
         return Response({'msg': 'Success'}, status=status.HTTP_200_OK)

@@ -99,3 +99,10 @@ class Review(models.Model):
     rating = models.IntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(5)]
     )
+
+class OrderAudio(models.Model):
+    audio = models.FileField(upload_to='order_audios/')  # Saves audio files
+    order = models.ForeignKey('Order', on_delete=models.CASCADE, related_name='audios')
+
+    def __str__(self):
+        return f"Audio for Order {self.order.id}"

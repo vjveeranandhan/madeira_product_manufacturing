@@ -25,7 +25,7 @@ def create_user(request):
             if serializer.is_valid():
                 user = CustomUser.objects.create(name= serializer.validated_data['name'], email = serializer.validated_data['email'],
                                                 phone = serializer.validated_data['phone'], age= serializer.validated_data['age'],
-                                                isAdmin = serializer.validated_data['isAdmin'], username=serializer.validated_data['name'],
+                                                isAdmin = serializer.validated_data.get('isAdmin', False), username=serializer.validated_data['name'],
                                                  salary_per_hr=serializer.validated_data['salary_per_hr'])
                 user.set_password(_data['password'])
                 user.save()
@@ -109,13 +109,22 @@ def update_user_by_id(request, user_id):
         user = get_object_or_404(CustomUser, id=user_id)
         
         data = request.data
+
+        # Check if phone number already exists for another user
+        if 'phone' in data:
+            if CustomUser.objects.filter(phone=data['phone']).exclude(id=user_id).exists():
+                return Response({'error': 'Phone number already exists.'}, status=status.HTTP_400_BAD_REQUEST)
+            user.phone = data['phone']
+        
+        # Check if email already exists for another user
+        if 'email' in data:
+            if CustomUser.objects.filter(email=data['email']).exclude(id=user_id).exists():
+                return Response({'error': 'Email already exists.'}, status=status.HTTP_400_BAD_REQUEST)
+            user.email = data['email']
         
         if 'name' in data:
             user.name = data['name']
-        if 'phone' in data:
-            user.phone = data['phone']
-        if 'email' in data:
-            user.email = data['email']
+            user.username = data['name']
         if 'isAdmin' in data:
             user.isAdmin = data['isAdmin']
         if 'salary_per_hr' in data:
